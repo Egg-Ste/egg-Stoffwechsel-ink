@@ -1243,6 +1243,46 @@ body.reise main#view { width: min(980px, 100%); }
 .fa-src { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 6px; margin: 10px 0; }
 .fa-srcit { display: flex; gap: 10px; align-items: center; padding: 8px 12px; border-radius: 12px; background: var(--bg-2); border: 1px solid var(--line-2); font-weight: 600; }
 
+/* ---------- Erlebe es: Kontextkarte, Nummern am Versuch, Checkliste ---------- */
+.erl-ctx { border: 1px solid var(--line-2); border-left: 5px solid #ffe36e; background: var(--bg-2); border-radius: 14px; padding: 12px 16px; margin: 4px 0 10px; }
+.erl-ctx-h { font-size: 1.02rem; margin-bottom: 4px; }
+.erl-ctx p { margin: 4px 0; }
+.erl-frage { color: var(--text-2); }
+.erl-vkbtn { margin-top: 6px; border: 1px solid var(--line-2); background: var(--panel); color: var(--text); font: 700 .86rem var(--font); padding: 6px 12px; border-radius: 99px; cursor: pointer; }
+.erl-vkbtn.on, .erl-vkbtn:hover { border-color: #ffe36e; }
+.erl-vk { margin: 0 0 10px; }
+.ep-bar { margin: 6px 0 2px; }
+.ep-box { position: relative; }
+.ep-box .erl-stage { margin: 6px 0; }
+.ep-layer { position: absolute; inset: 0; pointer-events: none; z-index: 4; }
+.ep-pt { pointer-events: auto; width: 28px; height: 28px; font-size: .85rem; border-width: 2.5px; }
+.ep-note { z-index: 6; }
+.ep-note.sheet { position: relative; margin: 2px 4px 10px; }
+.erl-tasks { display: grid; gap: 6px; }
+.erl-task { display: flex; gap: 10px; align-items: flex-start; padding: 9px 12px; border: 1px solid var(--line-2); border-radius: 12px; background: var(--bg-2); }
+.erl-task.done { border-color: #46d17d; }
+.erl-l { flex: 0 0 auto; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: var(--panel); border: 1px solid var(--line-2); font-weight: 900; font-size: .85rem; }
+.erl-task.done .erl-l { background: #46d17d; color: #0b1a10; border-color: #46d17d; }
+.erl-tx { flex: 1 1 auto; min-width: 0; }
+.erl-res { margin-top: 6px; padding: 8px 10px; border-radius: 10px; background: rgba(70, 209, 125, .10); font-size: .95rem; }
+.erl-done { flex: 0 0 auto; border: 1px solid var(--line-2); background: var(--panel); color: var(--text-2); font: 800 .8rem var(--font); padding: 5px 10px; border-radius: 99px; cursor: pointer; white-space: nowrap; }
+.erl-done.on { background: #46d17d; border-color: #46d17d; color: #0b1a10; }
+.erl-ergrow { margin: 12px 0 4px; }
+.erl-ergbtn.on { border-color: #ffe36e; }
+.erl-erg { border: 1px solid #ffe36e55; background: rgba(255, 227, 110, .07); border-radius: 14px; padding: 10px 14px; }
+@media (max-width: 560px) { .erl-task { flex-wrap: wrap; } .erl-done { margin-left: 36px; } }
+.ep-box .erl-stage { padding-left: 10px; }
+.ep-note.ep-narrow { width: auto !important; transform: none; }
+@media (max-width: 560px) {
+  .erl-tx { flex: 1 1 0; }
+  .erl-done { flex-basis: auto; margin-left: 36px; }
+}
+.erl-more > summary { display: flex; align-items: center; gap: 10px; }
+.erl-more-sub { display: block; margin-top: 3px; font-weight: 500; color: var(--muted); font-size: .9rem; }
+.erl-more-open { margin-left: auto; flex: 0 0 auto; border: 1px solid var(--line-2); background: var(--panel); border-radius: 99px; padding: 4px 10px; font-weight: 800; font-size: .82rem; }
+.erl-more[open] .erl-more-open { visibility: hidden; }
+.erl-more > summary::after { display: none !important; }
+
 </style>
   <script>window.addEventListener('error', function (e) { window.__swErr = (window.__swErr || []).concat(String(e.message || e)); });</script>
 </head>
@@ -8250,24 +8290,130 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
   }
   SW.noteFig = noteFig;
 
-  /* ---------- Erlebe es: Animation + Schritte zum Aufklappen ---------- */
+  /* ---------- Erlebe es: Kontext sichtbar, Nummern direkt am Versuch, Aufgaben als Checkliste ---------- */
+  function erklPunkte(box, stage, P, key) {
+    const seen = new Set(store.get('ep:' + key, []));
+    const layer = h('div', { class: 'ep-layer' });
+    const note = h('div', { class: 'nf-note ep-note', hidden: true, role: 'dialog' });
+    box.appendChild(layer); box.appendChild(note);
+    const cnt = h('span', { class: 'nf-cnt' });
+    let cur = -1;
+    const pts = P.map((p, i) => {
+      const b = h('button', { type: 'button', class: 'nf-pt ep-pt', 'aria-label': 'Erklärung ' + (i + 1) + ': ' + strip(p[1]) }, String(i + 1));
+      b.addEventListener('click', e => { e.stopPropagation(); cur === i && !note.hidden ? close() : show(i); });
+      layer.appendChild(b); return b;
+    });
+    function find(a) {
+      const [selT, at] = a.split('@');
+      const [sel, tx] = selT.split('~');
+      let el;
+      if (sel.indexOf('btn:') === 0) { const t = sel.slice(4); el = [...stage.querySelectorAll('button, label, .chip, summary')].find(x => x.offsetParent && x.textContent.indexOf(t) >= 0); }
+      else el = [...stage.querySelectorAll(sel)].find(x => x.getClientRects().length && (!tx || x.textContent.indexOf(tx) >= 0));
+      const f = at ? at.split(',').map(Number) : null;
+      return [el, f];
+    }
+    function place() {
+      if (!box.isConnected) return;
+      const r0 = box.getBoundingClientRect();
+      P.forEach((p, i) => {
+        const [el, f] = find(p[0]); const b = pts[i];
+        if (!el) { b.style.display = 'none'; return; }
+        const r = el.getBoundingClientRect(); b.style.display = '';
+        let x = r.left - r0.left + (f ? r.width * f[0] / 100 : -9), y = r.top - r0.top + (f ? r.height * f[1] / 100 : -7);
+        x = Math.max(14, Math.min(r0.width - 14, x)); y = Math.max(14, Math.min(r0.height - 14, y));
+        b.style.left = x + 'px'; b.style.top = y + 'px';
+      });
+      if (cur >= 0 && !note.hidden && !note.classList.contains('ep-narrow')) posNote();
+      if (typeof upd === 'function') upd();
+    }
+    const upd = () => { const vis = pts.filter(b => b.style.display !== 'none').length, sv = pts.filter((b, i) => b.style.display !== 'none' && seen.has(i)).length; cnt.textContent = sv >= vis ? '✓ alles erklärt' : sv + ' von ' + vis + ' angeschaut'; pts.forEach((b, i) => b.classList.toggle('seen', seen.has(i))); };
+    function close() { note.hidden = true; cur = -1; pts.forEach(b => b.classList.remove('on')); }
+    function posNote() {
+      const W = box.clientWidth, H = box.clientHeight, br = pts[cur].getBoundingClientRect(), r0 = box.getBoundingClientRect();
+      const px = br.left + br.width / 2 - r0.left, py = br.top + br.height / 2 - r0.top;
+      const nw = Math.min(320, W * 0.46); note.style.width = nw + 'px';
+      note.style.left = Math.max(6, Math.min(W - nw - 6, px > W / 2 ? px - nw - 24 : px + 24)) + 'px';
+      note.style.top = '0px';
+      const nh = note.offsetHeight;
+      note.style.top = Math.max(6, Math.min(Math.max(6, H - nh - 6), py - nh / 2)) + 'px';
+    }
+    function show(i) {
+      cur = i; seen.add(i); store.set('ep:' + key, [...seen]);
+      pts.forEach((b, k) => b.classList.toggle('on', k === i));
+      const [, t, txt] = P[i];
+      note.innerHTML = '';
+      note.append(h('span', { class: 'nf-pin', 'aria-hidden': 'true' }),
+        h('button', { class: 'nf-x', type: 'button', 'aria-label': 'Notiz schließen', onclick: e => { e.stopPropagation(); close(); } }, '×'),
+        h('div', { class: 'nf-t' }, h('span', { class: 'nf-n' }, i + 1), h('b', { html: fmt(t) })),
+        h('div', { class: 'nf-txt', html: fmt(txt) }),
+        (nx => nx >= 0 ? h('button', { class: 'nf-next', type: 'button', onclick: e => { e.stopPropagation(); show(nx); } }, 'Weiter zu ' + (nx + 1) + ' →') : h('div', { class: 'nf-end' }, '🎉 Jetzt kennst du alles – leg los!'))(pts.findIndex((b, k) => k > i && b.style.display !== 'none')));
+      note.hidden = false;
+      note.style.setProperty('--rot', (i % 2 ? 1.2 : -1.2) + 'deg');
+      if (box.clientWidth < 560) { note.classList.remove('sheet'); note.classList.add('ep-narrow'); const br = pts[i].getBoundingClientRect(), r0 = box.getBoundingClientRect(); note.style.width = ''; note.style.left = '6px'; note.style.right = '6px'; note.style.top = Math.min(br.bottom - r0.top + 12, Math.max(6, box.clientHeight - 40)) + 'px'; setTimeout(() => { const nr = note.getBoundingClientRect(); if (nr.bottom > window.innerHeight - 10) window.scrollBy({ top: nr.bottom - window.innerHeight + 20, behavior: 'smooth' }); else if (nr.top < 120) window.scrollBy({ top: nr.top - 130, behavior: 'smooth' }); }, 30); }
+      else { note.classList.remove('sheet', 'ep-narrow'); note.style.right = ''; posNote(); setTimeout(() => { const nr = note.getBoundingClientRect(); if (nr.top < 150) window.scrollBy({ top: nr.top - 160, behavior: 'smooth' }); else if (nr.bottom > window.innerHeight) window.scrollBy({ top: nr.bottom - window.innerHeight + 16, behavior: 'smooth' }); }, 30); }
+      upd();
+    }
+    box.addEventListener('click', e => { if (!e.target.closest('.ep-note') && !e.target.closest('.ep-pt')) { close(); setTimeout(place, 60); } });
+    const ro = window.ResizeObserver ? new ResizeObserver(place) : null; if (ro) ro.observe(stage);
+    const iv = setInterval(() => { if (!box.isConnected) { clearInterval(iv); if (ro) ro.disconnect(); return; } place(); }, 700);
+    window.addEventListener('resize', place, { passive: true });
+    SW.onCleanup && SW.onCleanup(() => { clearInterval(iv); if (ro) ro.disconnect(); window.removeEventListener('resize', place); });
+    place(); upd();
+    return h('div', { class: 'nf-bar ep-bar' }, h('span', null, '👆 Tippe auf die gelben Nummern – sie erklären, was du siehst.'), cnt, h('button', { type: 'button', class: 'nf-tour', onclick: e => { e.stopPropagation(); const k = pts.findIndex(b => b.style.display !== 'none'); show(k < 0 ? 0 : k); } }, '▶ Rundgang starten'));
+  }
+
   function erlebe(E, st) {
     const G = SW.GUIDES[E.key] || {};
+    const X = (SW.ERLEBEN || {})[E.ekey || E.key] || {};
     const wrap = h('div', { class: 'erl' });
-    if (E.intro) wrap.appendChild(h('p', { class: 'k-lead', html: fmt(E.intro) }));
-    if (G.sehen) wrap.appendChild(aufklapp('👀 <b>Was siehst du?</b> – Legende zur Animation', h('div', { class: 'mis-leg' }, G.sehen.map(([a, b]) => h('div', null, h('b', { html: fmt(a) }), h('span', { html: fmt(b) }))))));
-    const stage = h('div', { class: 'erl-stage' }); wrap.appendChild(stage);
-    st = (E.st && SW.ST[E.st]) || st;
-    setTimeout(() => { SW._raw = true; try { if (E.kind === 'player') SW.mountPlayer(stage, E.id, st); else if (E.kind === '3d') SW.mount3D(stage, E.id, {}); else SW.mountSim(stage, E.id, E.opts || {}, st); } finally { SW._raw = false; } }, 0);
-    if (G.auftraege) {
-      wrap.appendChild(h('div', { class: 'erl-sub' }, '🪜 Schritt für Schritt – tippe auf einen Schritt, dann erscheint die Erklärung:'));
-      wrap.appendChild(h('div', { class: 'erl-steps' }, G.auftraege.map((a, i) => h('details', { class: 'erl-step' },
-        h('summary', null, h('span', { class: 'erl-nr' }, i + 1), h('span', { html: fmt(a) })),
-        G.erkl && G.erkl[i] ? h('div', { class: 'prose erl-ex', html: '<p>' + fmt(G.erkl[i]) + '</p>' }) : null))));
-    }
-    if (G.erkenntnis) wrap.appendChild(aufklapp('💡 <b>Was zeigt die Animation?</b> – aufklappen, wenn du fertig bist', h('div', { class: 'prose', html: '<p>' + fmt(G.erkenntnis) + '</p>' })));
+    // 1) Kontext – immer sichtbar
     const vk = SW.versuchBlock && SW.versuchBlock(E.key);
-    if (vk) { vk.open = false; wrap.appendChild(vk); }
+    const ctx = h('div', { class: 'erl-ctx' },
+      h('div', { class: 'erl-ctx-h' }, X.icon || '🧭', ' ', h('b', null, X.titel || 'Worum geht es?')),
+      h('p', { html: fmt(X.worum || E.intro || '') }),
+      (X.frage || G.frage) ? h('p', { class: 'erl-frage', html: '❓ <b>Die Frage:</b> ' + fmt(X.frage || G.frage) }) : null);
+    wrap.appendChild(ctx);
+    if (vk) {
+      vk.open = true; vk.hidden = true; vk.classList.add('erl-vk');
+      const tb = h('button', { type: 'button', class: 'erl-vkbtn' }, '📋 Der echte Laborversuch: Material und Ablauf');
+      tb.addEventListener('click', () => { vk.hidden = !vk.hidden; tb.classList.toggle('on', !vk.hidden); });
+      ctx.appendChild(tb); wrap.appendChild(vk);
+    }
+    // 2) Versuch mit Nummern direkt an den Elementen
+    const box = h('div', { class: 'ep-box' });
+    const stage = h('div', { class: 'erl-stage' }); box.appendChild(stage);
+    const barSlot = h('div'); wrap.appendChild(barSlot); wrap.appendChild(box);
+    st = (E.st && SW.ST[E.st]) || st;
+    setTimeout(() => {
+      SW._raw = true;
+      try { if (E.kind === 'player') SW.mountPlayer(stage, E.id, st); else if (E.kind === '3d') SW.mount3D(stage, E.id, {}); else SW.mountSim(stage, E.id, E.opts || {}, st); } finally { SW._raw = false; }
+      if (X.punkte && X.punkte.length) setTimeout(() => barSlot.appendChild(erklPunkte(box, stage, X.punkte, E.ekey || E.key)), 250);
+      // alte Stationsnummern (z. B. „(2.5)“) aus den Texten der Versuche entfernen – sie passen nicht zur neuen Kapitelzählung
+      const RX1 = /\s?\([123]\.\d{1,2}\)|\s?→ Station [123]\.\d{1,2}|\s?\(→ [123]\.\d{1,2}( \/ [123]\.\d{1,2})*\)/, RXG = new RegExp(RX1.source, 'g');
+      const clean = () => { const w = document.createTreeWalker(stage, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) if (RX1.test(n.nodeValue)) n.nodeValue = n.nodeValue.replace(RXG, ''); };
+      clean();
+      if (window.MutationObserver) { const mo = new MutationObserver(clean); mo.observe(stage, { childList: true, subtree: true, characterData: true }); SW.onCleanup && SW.onCleanup(() => mo.disconnect()); }
+    }, 0);
+    // 3) Aufgaben als Checkliste – sichtbar, Ergebnis erst nach „erledigt“
+    const tasks = X.aufgaben || (G.auftraege || []).map((a, i) => [a, G.erkl && G.erkl[i]]);
+    if (tasks.length) {
+      wrap.appendChild(h('div', { class: 'erl-sub' }, '🎯 Probier es aus'));
+      wrap.appendChild(h('div', { class: 'erl-tasks' }, tasks.map(([a, r], i) => {
+        const res = r ? h('div', { class: 'erl-res', hidden: true, html: '👀 <b>Das solltest du sehen:</b> ' + fmt(r) }) : null;
+        const btn = h('button', { type: 'button', class: 'erl-done' }, '✓ erledigt');
+        btn.addEventListener('click', () => { const on = !btn.classList.contains('on'); btn.classList.toggle('on', on); row.classList.toggle('done', on); if (res) res.hidden = !on; });
+        const row = h('div', { class: 'erl-task' }, h('span', { class: 'erl-l' }, String.fromCharCode(65 + i)), h('div', { class: 'erl-tx' }, h('div', { html: fmt(a) }), res), btn);
+        return row;
+      })));
+    }
+    // 4) Auflösung
+    const erg = X.ergebnis || G.erkenntnis;
+    if (erg) {
+      const eb = h('div', { class: 'erl-erg prose', hidden: true, html: '<p>' + fmt(erg) + '</p>' });
+      const bt = h('button', { type: 'button', class: 'btn ghost erl-ergbtn' }, '💡 Auflösung: Was zeigt der Versuch?');
+      bt.addEventListener('click', () => { eb.hidden = !eb.hidden; bt.classList.toggle('on', !eb.hidden); });
+      wrap.appendChild(h('div', { class: 'erl-ergrow' }, bt)); wrap.appendChild(eb);
+    }
     return wrap;
   }
 
@@ -8536,9 +8682,9 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
 
     // 4 Erleben (+ Karteikarten)
     const EL = [].concat(D.erleben);
-    const erl = sec(4, 'erleben', 'Erlebe es', EL.length > 1 ? 'Ein Hauptversuch – weitere Versuche kannst du darunter aufklappen.' : 'Ausprobieren und beobachten – jeder Schritt lässt sich aufklappen.',
-      EL.length > 1 ? h('h3', { class: 'erl-h' }, '▶️ ' + EL[0].titel) : null, erlebe(EL[0], st),
-      ...EL.slice(1).map((E, i) => { const d = h('details', { class: 'auf erl-more' }, h('summary', null, h('span', { class: 'auf-t', html: '🧪 <b>Noch ein Versuch:</b> ' + E.titel })), h('div', { class: 'auf-b' })); let f = false; d.addEventListener('toggle', () => { if (d.open && !f) { f = true; d.querySelector('.auf-b').appendChild(erlebe(E, st)); } }); return d; }));
+    const erl = sec(4, 'erleben', 'Erlebe es', EL.length > 1 ? 'Erst lesen, worum es geht – dann ausprobieren. Die gelben Nummern erklären jede Anzeige. Weitere Versuche findest du darunter.' : 'Erst lesen, worum es geht – dann ausprobieren. Die gelben Nummern erklären jede Anzeige.',
+      erlebe(EL[0], st),
+      ...EL.slice(1).map((E, i) => { const XX = (SW.ERLEBEN || {})[E.ekey || E.key] || {}; const fullT = String(XX.worum || E.intro || '').replace(/<[^>]+>/g, ''); const first = (fullT.match(/^[\s\S]*?[.!?](?=\s|$)/) || [fullT])[0]; const d = h('details', { class: 'auf erl-more' }, h('summary', null, h('span', { class: 'auf-t', html: '🧪 <b>Weiterer Versuch:</b> ' + E.titel + (first ? '<small class="erl-more-sub">' + first + '</small>' : '') }), h('span', { class: 'erl-more-open' }, '▶ öffnen')), h('div', { class: 'auf-b' })); let f = false; d.addEventListener('toggle', () => { if (d.open && !f) { f = true; d.querySelector('.auf-b').appendChild(erlebe(E, st)); } }); return d; }));
     const cards = (D.karten || []).reduce((a, s) => a.concat((SW.ST[s] && SW.ST[s].karten) || []), []);
     if (cards.length) { const d = aufklapp('🃏 <b>Karteikarten zum Wiederholen</b> (' + cards.length + ' Karten)', h('div')); let f = false; d.addEventListener('toggle', () => { if (d.open && !f) { f = true; d.querySelector('.auf-b').appendChild(SW.flashcards(cards, 'rk:' + id + ':')); } }); erl.appendChild(d); }
     view.appendChild(erl);
@@ -8610,6 +8756,693 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
     window.addEventListener('hashchange', mark); mark();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nav); else nav();
+})();
+
+</script>
+  <script>/* js/erleben.js */
+/* ==========================================================
+   Erlebe es – Kontext, Erklär-Nummern direkt am Versuch, Aufgaben
+   Schlüssel = Guide-Schlüssel des Versuchs (E.key) bzw. E.ekey
+   punkte: [Anker, Titel, Text]
+     Anker: CSS-Selektor | 'btn:Text' (Knopf/Beschriftung mit diesem Text)
+            optional '@x,y' = Position in Prozent innerhalb des Elements
+   aufgaben: [Auftrag, Das solltest du sehen]
+   ========================================================== */
+(function () {
+  'use strict';
+  const SW = window.SW;
+  const E = SW.ERLEBEN = SW.ERLEBEN || {};
+
+  E.zelllabor = {
+    icon: '🔬', titel: 'Ein echter Forschungsversuch',
+    worum: 'Forschende wollten wissen, <b>wo</b> in der Zelle Glucose abgebaut wird. Dazu haben sie Leberzellen zerkleinert, die Bestandteile getrennt und jedem Teil Nährstoffe gegeben. Verbraucht eine Probe Sauerstoff, läuft dort der vollständige Abbau. Genau diesen Versuch machst du hier nach.',
+    frage: 'Wo in der Zelle wird Glucose abgebaut – im Zellplasma oder im Mitochondrium?',
+    punkte: [
+      ['btn:Sauerstoffelektrode', 'Zwei Versuche', 'Du kannst zwischen zwei echten Versuchen wählen: <b>①</b> Eine Sauerstoffelektrode misst, ob eine Probe Sauerstoff verbraucht. <b>②</b> Mit markierter Glucose verfolgt man, wohin der Kohlenstoff der Glucose wandert. Starte mit ①.'],
+      ['btn:Probe', 'Die Probe', 'Leberzellen wurden zerkleinert: Das <b>Zellhomogenat</b> enthält alles. Eine Zentrifuge trennt es auf: <b>ohne Mitochondrien</b> = nur Zellplasma, <b>nur Mitochondrien</b> = die isolierten Kraftwerke.'],
+      ['btn:Zugabe', 'Der Nährstoff', 'Was kommt in das Gefäß? <b>Glucose</b> – oder <b>Pyruvat</b>, das Bruchstück, das bei der Glykolyse aus Glucose entsteht.'],
+      ['btn:ADP und Phosphat', 'ADP + Phosphat', 'Die Rohstoffe, aus denen ATP gebaut wird. Gibst du sie nach 7 Minuten dazu, siehst du, ob Sauerstoffverbrauch und ATP-Bildung zusammenhängen.'],
+      ['btn:Messung starten', 'Messung starten', 'Startet die Messung. Miss mehrere Ansätze nacheinander – alle Kurven erscheinen im selben Diagramm, so kannst du vergleichen.'],
+      ['.chart@50,6', 'Das Diagramm', 'Es zeigt den <b>Sauerstoffgehalt</b> im verschlossenen Gefäß über 12 Minuten. Bleibt die Kurve oben, wird kein O₂ verbraucht. <b>Fällt</b> sie, verbraucht die Probe Sauerstoff – dann läuft dort der vollständige Abbau.'],
+      ['.sim-out', 'Die Auswertung', 'Hier erklärt dir das Labor nach jeder Messung, was passiert ist.'],
+      ['btn:Zusatz zur', 'Was kommt dazu?', 'Zur Lösung mit markierter Glucose gibst du a) nur isolierte Mitochondrien, b) ganze, intakte Zellen oder c) Zellplasma und Mitochondrien zusammen.'],
+      ['btn:Inkubieren', 'Inkubieren und zentrifugieren', 'Erst dürfen die Proben eine Weile mit der Glucose arbeiten. Dann schleudert die Zentrifuge alles Schwere nach unten.'],
+      ['svg:not(.chart)@20,18', 'Das Röhrchen', 'Oben: Glucoselösung mit <b>radioaktiv markierter Glucose</b> (¹⁴C) – ein Etikett, das man messen kann. Die orangefarbenen Teilchen sind deine Probe: Mitochondrien bzw. Zellen.'],
+      ['svg:not(.chart)@20,52', 'Silikonöl', 'Eine Trennschicht: Nur Zellen oder Mitochondrien sinken beim Zentrifugieren hindurch. Gelöste Glucose bleibt oben.'],
+      ['svg:not(.chart)@20,82', 'Salzlösung unten', 'Hier landen Zellen bzw. Mitochondrien. Ist es hier radioaktiv, haben sie den Kohlenstoff der Glucose aufgenommen.'],
+      ['svg:not(.chart)@74,14', 'Radioaktivität', 'Nach dem Zentrifugieren zeigen Balken, wie radioaktiv jede Schicht ist – also wo der markierte Kohlenstoff gelandet ist.']
+    ],
+    aufgaben: [
+      ['Miss das <b>Zellhomogenat</b> mit Glucose und schau auf das Diagramm (Nummer 6).', 'Die Kurve fällt: Die vollständige Zelle baut Glucose mit Sauerstoff ab. Das ist deine Vergleichsprobe.'],
+      ['Miss <b>nur Mitochondrien</b> – einmal mit Glucose, einmal mit Pyruvat.', 'Mit Glucose bleibt die Kurve oben, mit Pyruvat fällt sie. Mitochondrien können nur Pyruvat verwerten, keine Glucose.'],
+      ['Miss die Probe <b>ohne Mitochondrien</b> mit Glucose.', 'Kein Sauerstoffverbrauch: Das Zellplasma zerlegt Glucose zwar zu Pyruvat, braucht dafür aber keinen Sauerstoff.'],
+      ['Miss <b>nur Mitochondrien mit Pyruvat</b> noch einmal – diesmal mit <b>+ ADP und Phosphat</b> (Nummer 4).', 'Ohne ADP flacht die Kurve bald ab, mit ADP und Phosphat fällt sie weiter: Wenn ATP gebaut werden kann, wird mehr Sauerstoff verbraucht.'],
+      ['Wechsle zu Versuch <b>②</b> und probiere a), b) und c) aus.', 'Isolierte Mitochondrien bleiben unten „unmarkiert“ – sie nehmen keine Glucose auf. Bei ganzen Zellen und bei Zellplasma + Mitochondrien wird es unten radioaktiv: Erst nach der Glykolyse im Zellplasma gelangt der Kohlenstoff in die Mitochondrien.']
+    ],
+    ergebnis: 'Die Zelle teilt sich die Arbeit: Die <b>Glykolyse</b> (Glucose → Pyruvat) läuft im <b>Zellplasma</b> und braucht keinen Sauerstoff. Erst das <b>Pyruvat</b> gelangt ins <b>Mitochondrium</b> und wird dort mit Sauerstoff vollständig abgebaut. Und: Mit ADP und Phosphat steigt der Sauerstoffverbrauch – Atmung und ATP-Bildung hängen zusammen.'
+  };
+  E.energiefluss = {
+    icon: '🔥', titel: 'Energie als Fluss',
+    worum: 'Energie geht nie verloren – sie wechselt nur ihre Form. Das Bild zeigt das wie einen Fluss: Links fließt die Energie hinein, rechts teilt sie sich auf. Je breiter ein Strom, desto mehr Energie fließt dorthin.',
+    frage: 'Wie viel der Energie wird zu nutzbarer Arbeit – und wie viel zu Wärme?',
+    punkte: [
+      ['btn:Sprint (Muskel)', 'Drei Beispiele', 'Wähle, wessen Energiefluss du sehen willst: einen Muskel im Sprint, die Zellatmung in einer Zelle oder ein Blatt bei der Fotosynthese.'],
+      ['svg@10,45', 'Die Energie am Anfang', 'Der linke Block ist die Energie, die hineingeht – zum Beispiel die chemische Energie im ATP. Sie entspricht 100 %.'],
+      ['svg@78,15', 'Nutzbare Arbeit', 'Der grüne Strom ist der Teil, der als <b>nutzbare Arbeit</b> ankommt – beim Sprint die Bewegung.'],
+      ['svg@78,42', 'Wärme', 'Der rote Strom ist der Teil, der zu <b>Wärme</b> wird. Die weißen Punkte zeigen, wie die Energie fließt.'],
+      ['.meter', 'Thermometer', 'Zeigt, wie viel Wärme an die Umgebung abgegeben wird. Diese Energie ist nicht weg – aber keine Zelle kann sie noch für Arbeit nutzen.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, was das Bild für das gewählte Beispiel bedeutet.']
+    ],
+    aufgaben: [
+      ['Lies beim <b>Sprint</b> ab: Wie viel Prozent werden Bewegung, wie viel Wärme?', 'Nur etwa 25 % werden Bewegung, rund 75 % werden Wärme. Deshalb wird dir beim Sport so warm.'],
+      ['Wechsle zu <b>Zellatmung</b> und <b>Fotosynthese</b> und vergleiche die Anteile.', 'Bei jeder Umwandlung wird ein Teil zu Wärme. Kein Schritt schafft 100 %.'],
+      ['Beobachte das Thermometer (Nummer 5).', 'Es steigt: Die Wärme verteilt sich in der Umgebung. Darum brauchen Lebewesen ständig neue Energie.']
+    ],
+    ergebnis: 'Energie kann weder erzeugt noch vernichtet, sondern nur <b>umgewandelt</b> werden. Bei jeder Umwandlung entsteht aber auch <b>Wärme</b>. Diese Energie verteilt sich in der Umgebung und kann von Zellen nicht mehr genutzt werden. Deshalb brauchen Lebewesen <b>ständig Nachschub</b> – Tiere aus der Nahrung, Pflanzen aus dem Licht. Nutzlos ist die Wärme trotzdem nicht: Sie hält unseren Körper auf 37 °C.'
+  };
+
+  E.speicher = {
+    icon: '🔋', titel: 'Die Vorräte des Körpers',
+    worum: 'Du isst nicht ununterbrochen – trotzdem braucht dein Körper jede Sekunde Energie. Dann greift er auf seine Vorräte zurück. Hier siehst du, welche Speicher es gibt und wie lange jeder einzelne reichen würde.',
+    frage: 'Welcher Speicher ist schnell verfügbar – und welcher ist der größte?',
+    punkte: [
+      ['btn:in Ruhe', 'Zwei Situationen', 'Vergleiche den Körper in Ruhe mit einem Marathonlauf.'],
+      ['svg@8,5', 'Die Speicher', 'Links stehen die Vorräte des Körpers: Glucose im Blut, Glykogen in Leber und Muskeln, Muskelprotein und Fett – jeweils mit ihrer Menge.'],
+      ['svg@36,16', 'Die Balken', 'Jeder Balken zeigt, <b>wie lange</b> dieser Speicher reichen würde, wenn der Körper nur von ihm leben müsste.'],
+      ['svg@60,93', 'Achtung, Zeitachse', 'Die Achse ist gestaucht: Jeder Schritt nach rechts ist ein Vielfaches – von Minuten über Stunden bis zu Wochen.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, was die Balken bedeuten.']
+    ],
+    aufgaben: [
+      ['Vergleiche die Balken <b>in Ruhe</b>: Welcher Speicher reicht am kürzesten, welcher am längsten?', 'Die Glucose im Blut reicht nur etwa 30 Minuten, das Glykogen ungefähr einen Tag, das Fett mehrere Wochen.'],
+      ['Schalte auf <b>beim Marathon</b>.', 'Alle Zeiten werden viel kürzer, weil der Körper pro Minute viel mehr Energie braucht.'],
+      ['Warum braucht der Körper neben dem riesigen Fettspeicher auch Glykogen?', 'Glykogen liefert Glucose sehr schnell. Fett ist ein großer, platzsparender Speicher, wird aber langsamer abgebaut.']
+    ],
+    ergebnis: 'Die <b>Blutglucose</b> reicht nur Minuten, das <b>Glykogen</b> in Leber und Muskeln etwa einen Tag, die <b>Fettreserven</b> mehrere Wochen. Proteine sind keine echte Reserve – sie werden nur im Notfall abgebaut. Fette sind die platzsparendsten Speicher, Glucose ist die <b>schnellste</b> Energiequelle. Für alle gilt: Die Energie muss erst in <b>ATP</b> umgetauscht werden, bevor ein Muskel sie nutzen kann.'
+  };
+
+  E.atp = {
+    icon: '🔋', titel: 'Der Akku der Zelle',
+    worum: 'ATP ist der Energieträger, mit dem jede Zelle ihre Arbeit „bezahlt“. Oben siehst du ein ATP-Molekül, das du selbst spalten und wieder aufladen kannst. Unten testest du, wie lange der Vorrat im Muskel reicht.',
+    frage: 'Wie gibt ATP Energie ab – und warum geht dem Muskel der Vorrat trotzdem nicht aus?',
+    punkte: [
+      ['svg@20,33', 'Das ATP-Molekül', 'Drei Phosphatgruppen (rosa), der Zucker Ribose (grün) und die Base Adenin (orange). <b>Tippe auf die äußere Phosphatgruppe</b> ganz links, um sie abzuspalten.'],
+      ['btn:ATP spalten', 'Spalten', 'Spaltet die äußere Phosphatgruppe ab: Aus ATP werden ADP + Phosphat, und Energie wird frei – zum Beispiel für die Muskelbewegung.'],
+      ['btn:aufladen', 'Aufladen', 'Hängt die Phosphatgruppe wieder an. Die Energie dafür liefert der Abbau von Nährstoffen in der Zellatmung.'],
+      ['input[type=range]', 'Muskelarbeit', 'Stell ein, wie stark der Muskel arbeitet – von Ruhe bis Sprint.'],
+      ['.meter', 'ATP-Vorrat', 'So voll ist der ATP-Speicher im Muskel. Er ist winzig – wird aber ständig nachgefüllt.'],
+      ['.stats', 'Zähler', 'Links: Füllstand in Prozent. Rechts: wie viel ATP bisher umgesetzt wurde.']
+    ],
+    aufgaben: [
+      ['Tippe auf die äußere Phosphatgruppe oder auf <b>ATP spalten</b>.', 'Die äußere Phosphatgruppe löst sich: Aus ATP werden ADP + Phosphat, und Energie wird frei.'],
+      ['Lade das Molekül mit <b>aufladen</b> wieder auf.', 'Die Phosphatgruppe wird wieder angehängt. Das kostet Energie – sie stammt aus dem Abbau der Nährstoffe.'],
+      ['Stell die <b>Muskelarbeit</b> hoch und beobachte Vorrat und Zähler.', 'Der Vorrat bleibt fast voll, aber der Zähler steigt schnell: ATP wird ständig verbraucht und sofort nachgeliefert.']
+    ],
+    ergebnis: 'ATP besteht aus Adenin, Ribose und drei Phosphatgruppen. Wird die äußere Phosphatgruppe abgespalten, entstehen <b>ADP + Phosphat</b>, und rund <b>30 kJ/mol</b> werden frei. Der Vorrat reicht nur für Sekunden – deshalb wird ADP <b>ununterbrochen wieder zu ATP aufgeladen</b>, vor allem durch die Zellatmung. ATP ist also kein Speicher, sondern die <b>Energiewährung</b> der Zelle.'
+  };
+
+  E.sprint = {
+    icon: '⏱️', titel: 'Sprint oder Marathon?',
+    worum: 'Ein Sprinter und eine Marathonläuferin brauchen beide ATP – aber ihre Muskeln holen es aus unterschiedlichen Quellen. Das Diagramm zeigt, welche Quelle zu welchem Zeitpunkt die Hauptrolle spielt.',
+    frage: 'Woher kommt das ATP in den ersten Sekunden – und woher nach einer Stunde?',
+    punkte: [
+      ['.chart@6,6', 'Das Diagramm', 'Es zeigt, welcher Anteil der Energie im Muskel aus welcher Quelle stammt – abhängig von der Zeit seit Beginn der Belastung.'],
+      ['.chart@60,93', 'Achtung, Zeitachse', 'Die Achse ist gestaucht: von 1 Sekunde bis 2 Stunden. Jeder Strich nach rechts ist ein Vielfaches.'],
+      ['.legend', 'Die vier Quellen', 'Gelb: ATP-Vorrat · rosa: Kreatinphosphat · orange: Glucoseabbau ohne Sauerstoff (Milchsäuregärung) · grün: Abbau von Glucose und Fett mit Sauerstoff.'],
+      ['input[type=range]', 'Zeitregler', 'Verschieb ihn: Die gestrichelte Linie im Diagramm wandert mit, und unten steht, welche Quellen gerade arbeiten.'],
+      ['btn:100-m-Lauf', 'Zwei Beispiele', 'Springt direkt zu einem typischen Zeitpunkt für einen Sprint oder einen Marathon.'],
+      ['.sim-out', 'Die Anzeige', 'Hier steht, welche Quellen zum eingestellten Zeitpunkt wie viel liefern.']
+    ],
+    aufgaben: [
+      ['Schieb den Zeitregler langsam von 1 s bis 1 min.', 'Zuerst liefern ATP-Vorrat und Kreatinphosphat. Ab etwa 10 Sekunden übernimmt der Glucoseabbau ohne Sauerstoff.'],
+      ['Schieb weiter bis 2 h.', 'Nach einigen Minuten übernimmt der Abbau mit Sauerstoff (grün) – langsamer, aber er reicht für Stunden.'],
+      ['Vergleiche <b>100-m-Lauf</b> und <b>Marathon</b>.', 'Der Sprint lebt von den schnellen Quellen, der Marathon fast nur vom Abbau mit Sauerstoff.']
+    ],
+    ergebnis: 'In den ersten Sekunden nutzt der Muskel vorhandenes <b>ATP</b> und <b>Kreatinphosphat</b> – sehr schnell, aber winzige Vorräte. Danach liefert der <b>Glucoseabbau ohne Sauerstoff</b> (Milchsäuregärung) schnell ATP, aber wenig pro Glucose. Bei längerer Belastung übernimmt der <b>Abbau mit Sauerstoff</b>: langsamer, dafür etwa 30 ATP pro Glucose. Alle Wege laufen gleichzeitig – nur ihr Anteil verschiebt sich.'
+  };
+
+  E.kopplung = {
+    icon: '⚖️', titel: 'Bergauf mit ATP',
+    worum: 'Viele Reaktionen in der Zelle laufen „bergauf“: Sie brauchen Energie und laufen nicht von allein. Trotzdem passieren sie ständig. Der Trick: Die Zelle koppelt sie an die Spaltung von ATP. Das Diagramm zeigt, wie viel Energie jeweils vorher und nachher vorhanden ist.',
+    frage: 'Wie kann eine Reaktion ablaufen, die eigentlich Energie braucht?',
+    punkte: [
+      ['btn:Aufbau allein', 'Drei Reaktionen', 'Wähle nacheinander: ① den Aufbau von Glucose-6-phosphat allein, ② die Spaltung von ATP allein, ③ beide gekoppelt.'],
+      ['svg@4,40', 'Die Energie-Achse', 'Nach oben: mehr Energie. Ein Pfeil nach oben heißt „bergauf“ – die Reaktion braucht Energie.'],
+      ['svg@12,38', 'endergon', 'Die Produkte haben <b>mehr</b> Energie als die Ausgangsstoffe. So eine Reaktion läuft nicht von allein ab.'],
+      ['svg@36,36', 'exergon', 'Die Produkte haben <b>weniger</b> Energie: Energie wird frei, die Reaktion läuft von allein.'],
+      ['svg@2,93', 'ΔG und die Reaktion', 'Unten steht die Reaktion. ΔG ist die Energieänderung in kJ pro mol: <b>positiv</b> = braucht Energie, <b>negativ</b> = setzt Energie frei.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, was die gewählte Reaktion zeigt.']
+    ],
+    aufgaben: [
+      ['Wähle ① <b>Aufbau allein</b>.', 'ΔG = +13,8 kJ/mol: Die Reaktion braucht Energie (endergon) und läuft nicht von allein.'],
+      ['Wähle ② <b>ATP-Spaltung allein</b>.', 'ΔG = −30,5 kJ/mol: Hier wird viel Energie frei (exergon).'],
+      ['Wähle ③ <b>gekoppelt</b> und rechne: +13,8 + (−30,5) = ?', '−16,7 kJ/mol: Zusammen wird Energie frei – die gekoppelte Reaktion läuft ab.']
+    ],
+    ergebnis: 'Eine Reaktion, die Energie braucht (<b>endergon</b>), läuft nicht von allein ab. Ein Enzym kann sie aber mit einer Reaktion koppeln, die viel Energie freisetzt (<b>exergon</b>) – meist der ATP-Spaltung. Ist die Summe negativ, läuft der Gesamtvorgang ab. Genau so beginnt die <b>Glykolyse</b>: Ein Enzym überträgt eine Phosphatgruppe direkt vom ATP auf die Glucose.'
+  };
+  E.gradient = {
+    icon: '🌊', titel: 'Ein Staudamm für Protonen',
+    worum: 'Im Mitochondrium und im Chloroplasten entsteht ATP nach demselben Trick: Protonen (H⁺) werden auf eine Seite einer Membran gepumpt und stauen sich dort – wie Wasser hinter einem Staudamm. Hier steuerst du dieses Modell selbst.',
+    frage: 'Was treibt die ATP-Synthase eigentlich an?',
+    punkte: [
+      ['svg@0,5', 'Oben: der Stausee', 'Oberhalb der Membran sammeln sich die gepumpten Protonen (H⁺, rosa). Im Mitochondrium ist das der Intermembranraum.'],
+      ['svg@2,47', 'Die Membran', 'Die goldene Doppelreihe ist die Membran. Für H⁺ ist sie dicht: Hinauf kommen sie nur durch die Pumpe, zurück nur durch die ATP-Synthase.'],
+      ['svg@20,38', 'Die Pumpe', 'Sie befördert H⁺ nach oben – gegen das Gefälle. Das kostet Energie: Im Mitochondrium stammt sie aus der Atmungskette, im Chloroplasten aus Licht.'],
+      ['svg@69,47', 'Die ATP-Synthase', 'Die „Turbine“: Strömen H⁺ hindurch nach unten, dreht sich ihr Rotor, und aus ADP + Phosphat wird ATP.'],
+      ['svg@0,93', 'Unten: innen', 'Hier unten entsteht das ATP. Im Mitochondrium ist das die Matrix.'],
+      ['input[type=range]', 'Pumpleistung', 'Stellt ein, wie schnell die Pumpe arbeitet.'],
+      ['btn:Membran undicht', 'Membran undicht', 'Macht ein „Loch“ in die Membran – so wirkt ein Entkoppler. Dann fließen die H⁺ an der Turbine vorbei zurück.'],
+      ['btn:Säure-Sprung', 'Säure-Sprung', 'Ein berühmter Versuch: Das Gefälle wird künstlich mit Säure erzeugt – ganz ohne Pumpe. Entsteht trotzdem ATP?'],
+      ['.stats', 'Zähler', 'H⁺ oben und unten, gebildetes ATP und frei gewordene Wärme.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, was gerade passiert.']
+    ],
+    aufgaben: [
+      ['Stell die <b>Pumpleistung</b> hoch und beobachte, wo sich die H⁺ sammeln.', 'Oben sammeln sich immer mehr H⁺. Sie strömen durch die ATP-Synthase zurück – der ATP-Zähler steigt.'],
+      ['Stell die Pumpe auf 0 %.', 'Ohne Pumpe baut sich das Gefälle ab, und bald entsteht kein ATP mehr.'],
+      ['Pumpe wieder an – und mach die <b>Membran undicht</b>.', 'Die H⁺ fließen durch das Loch zurück statt durch die Turbine: kaum noch ATP, dafür viel Wärme.'],
+      ['Probier den <b>Säure-Sprung</b> aus.', 'Auch ohne Pumpe entsteht ATP – solange das künstliche Gefälle besteht. Das Gefälle allein treibt die ATP-Synthase an.']
+    ],
+    ergebnis: 'Pumpen befördern Protonen (H⁺) unter Energieaufwand auf eine Seite einer <b>dichten Membran</b>. Es entsteht ein <b>Protonengefälle</b>. Zurück können die Protonen nur durch die <b>ATP-Synthase</b>; dabei dreht sich ihr Rotor, und aus ADP + Phosphat wird ATP. Dieses Prinzip heißt <b>Chemiosmose</b>. Der Säure-Sprung zeigt: Schon ein künstliches Gefälle reicht für die ATP-Bildung. Genau so arbeiten Mitochondrien und Chloroplasten.'
+  };
+
+  E.redoxtreppe = {
+    icon: '🪜', titel: 'Feuer oder Treppe?',
+    worum: 'Die Energie der Glucose steckt in ihren Elektronen. Im Modell ist sie die <b>Höhe</b>, aus der eine Kugel fällt. Links fällt die Kugel auf einmal – wie bei einer Verbrennung. Rechts geht sie Stufe für Stufe hinab – wie in der Zelle.',
+    frage: 'Warum baut die Zelle Glucose in vielen kleinen Schritten ab?',
+    punkte: [
+      ['svg@0,4', 'Links: Verbrennung', 'Die Kugel fällt in einem Stück die ganze Höhe hinunter – die gesamte Energie wird auf einmal frei.'],
+      ['svg@20,85', 'Die Glasscheibe', 'Sie steht für die Zelle: Prallt die ganze Energie auf einmal auf, geht etwas kaputt, und die Energie wird nur Hitze.'],
+      ['svg@55,4', 'Rechts: Zellatmung', 'Hier wandern die Elektronen Stufe für Stufe hinab – von NADH über die Komplexe der Atmungskette bis zum Sauerstoff.'],
+      ['svg@96,78', 'Unten: Sauerstoff', 'Die letzte Stufe: Sauerstoff nimmt die Elektronen auf, es entsteht Wasser.'],
+      ['btn:einschrittig', 'Fallen lassen', 'Lässt die Kugel links in einem Schritt fallen.'],
+      ['btn:Treppe hinab', 'Treppe hinab', 'Lässt die Kugel rechts Stufe für Stufe hinunterlaufen.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, was gerade passiert ist.']
+    ],
+    aufgaben: [
+      ['Lass die Kugel links <b>einschrittig fallen</b>.', 'Die ganze Energie wird auf einmal frei – als Hitze. Die Zelle könnte damit nichts anfangen.'],
+      ['Schick die Kugel rechts die <b>Treppe hinab</b>.', 'Auf jeder Stufe wird eine kleine Portion Energie frei. Solche Portionen kann die Zelle nutzen, zum Beispiel zum Pumpen von Protonen.'],
+      ['Vergleiche: Haben beide Kugeln am Ende gleich viel Energie abgegeben?', 'Ja – die Höhe ist gleich. Der Unterschied ist nur, ob die Energie auf einmal oder in nutzbaren Portionen frei wird.']
+    ],
+    ergebnis: 'Bei einer Verbrennung wird die Energie der Glucose auf einen Schlag als Wärme frei. In der Zelle wandern die Elektronen dagegen über viele Stufen zum Sauerstoff. Auf jeder Stufe wird nur eine kleine Portion Energie frei – klein genug, dass die Zelle sie nutzen kann. Diese <b>Verbrennung in Etappen</b> ist der Grund, warum die Zellatmung so viel ATP liefert.'
+  };
+
+  E.bluebottle = {
+    icon: '🧪', titel: 'Ein Taxi, das die Farbe wechselt',
+    worum: 'Ein Modellversuch aus dem Chemieunterricht: In der Flasche übernimmt der Farbstoff <b>Methylenblau</b> die Rolle eines Elektronen-Taxis. Ob er gerade Elektronen trägt, siehst du an der Farbe: blau = leer, farblos = beladen.',
+    frage: 'Woher bekommt das „Taxi“ seine Elektronen – und wer nimmt sie ihm wieder ab?',
+    punkte: [
+      ['svg@14,20', 'Der Kolben', 'Darin: Glucose, Natronlauge und Methylenblau. Oben im verschlossenen Kolben ist Luft mit Sauerstoff.'],
+      ['svg@55,20', 'Sauerstoff', 'So viel Sauerstoff ist noch in der Luft im Kolben.'],
+      ['svg@55,38', 'Glucose', 'So viel Glucose ist noch in der Lösung. Sie gibt nach und nach ihre Elektronen ab.'],
+      ['svg@55,67', 'Die Farbe', '<b>Blau</b>: Der Farbstoff hat keine Elektronen (oxidiert). <b>Farblos</b>: Er hat Elektronen von der Glucose bekommen (reduziert).'],
+      ['btn:Schütteln', 'Schütteln', 'Beim Schütteln löst sich Sauerstoff aus der Luft in der Flüssigkeit. Er nimmt dem Farbstoff die Elektronen wieder ab.'],
+      ['.eq', 'Die Gleichungen', 'Oben: Die Glucose gibt Elektronen an den Farbstoff ab. Unten: Der Sauerstoff holt sie sich zurück – dabei entsteht Wasser.']
+    ],
+    aufgaben: [
+      ['Beobachte den Kolben, ohne etwas zu tun.', 'Die Lösung ist farblos: Die Glucose hat Elektronen an den Farbstoff abgegeben – das Taxi ist beladen.'],
+      ['Tippe auf <b>Schütteln</b>.', 'Die Lösung wird blau: Sauerstoff nimmt dem Farbstoff die Elektronen ab. Danach wird sie langsam wieder farblos.'],
+      ['Schüttle mehrmals und beobachte die Balken.', 'Sauerstoff und Glucose nehmen ab. Ist eines davon verbraucht, hört der Farbwechsel auf – wie in der Zelle braucht es beide.']
+    ],
+    ergebnis: 'Der Farbstoff verhält sich wie <b>NAD⁺</b> in der Zelle: Er übernimmt Elektronen von der Glucose (Reduktion) und gibt sie an Sauerstoff weiter (Oxidation). Danach ist er wieder frei für neue Elektronen. So pendeln die Elektronen-Taxis zwischen dem Abbau der Glucose und dem Sauerstoff hin und her.'
+  };
+
+  E['3d:mito'] = {
+    icon: '🧊', titel: 'Das Kraftwerk in 3D',
+    worum: 'Ein Mitochondrium ist nur 1–2 µm lang – hier kannst du es drehen und aufschneiden. <b>So geht’s:</b> Ziehen dreht das Modell, der Regler „Aufschneiden“ öffnet es, und die <b>Nummern im Modell</b> (oder die Begriffe rechts darunter) erklären dir jede Struktur.',
+    frage: 'Wie ist ein Mitochondrium aufgebaut – und wo läuft was ab?',
+    aufgaben: [
+      ['Schneide das Modell mit dem Regler auf und dreh es.', 'Innen siehst du die stark gefaltete innere Membran – die Cristae.'],
+      ['Tippe im Modell nacheinander auf die Nummern 1 bis 8.', 'Jede Nummer erklärt eine Struktur: Membranen, Intermembranraum, Cristae, Matrix, mtDNA, Ribosomen und ATP-Synthase.'],
+      ['Starte das <b>Quiz</b>.', 'Jetzt findest du die Strukturen selbst – ohne Beschriftung.']
+    ],
+    ergebnis: 'Das Mitochondrium hat <b>zwei Membranen</b>. Die innere ist zu <b>Cristae</b> gefaltet – das schafft Fläche für Atmungskette und ATP-Synthase. Im Innenraum, der <b>Matrix</b>, laufen oxidative Decarboxylierung und Citratzyklus. Eigene DNA und Ribosomen sind Hinweise darauf, dass Mitochondrien einmal Bakterien waren.'
+  };
+
+  E['player:glykolyse'] = {
+    icon: '🍬', titel: 'Du bist ein Glucosemolekül',
+    worum: 'Du schlüpfst in die Rolle eines Glucosemoleküls und erlebst die Glykolyse Schritt für Schritt – im Zellplasma der Muskelzelle. Jeder Schritt wird dir unten im Kasten erklärt.',
+    frage: 'Wie viel ATP bringt die Glykolyse – und was wird aus der Glucose?',
+    punkte: [
+      ['.pl-phases', 'Die drei Phasen', 'Hier siehst du, in welcher Phase du gerade bist: erst investieren, dann spalten, dann verdienen.'],
+      ['.pl-stage@3,5', 'Die Bühne', 'Hier ist dein Molekül. Jede graue Kugel ist ein C-Atom. Oben rechts steht, wo in der Zelle du gerade bist.'],
+      ['.pl-hud', 'Konto und Taxis', 'Links das ATP-Konto: Ausgaben (−) und Einnahmen (+). Rechts: wie viele NADH-Taxis schon beladen wurden.'],
+      ['.pl-card', 'Die Erklärung', 'Hier wird jeder Schritt erklärt. Mit dem Knopf unten geht es weiter.'],
+      ['btn:Schnelldurchlauf', 'Abkürzung', 'Spielt alle Schritte nacheinander ab. Mit „Neustart“ beginnst du von vorn.']
+    ],
+    aufgaben: [
+      ['Spiel die <b>Investitionsphase</b> durch und behalte das ATP-Konto im Blick.', 'Das Konto geht auf −2: Zuerst muss die Zelle zwei ATP investieren.'],
+      ['Spiel weiter bis zur <b>Spaltung</b>.', 'Das Molekül mit 6 C-Atomen zerfällt in zwei Hälften mit je 3 C-Atomen.'],
+      ['Spiel die <b>Ertragsphase</b> bis zum Ende.', 'Es entstehen 4 ATP und 2 NADH. Unterm Strich: +2 ATP, 2 NADH und 2 Pyruvat.']
+    ],
+    ergebnis: 'Die Glykolyse läuft im <b>Zellplasma</b> und braucht keinen Sauerstoff. Erst werden <b>2 ATP investiert</b>, dann wird der C₆-Zucker in <b>zwei C₃-Moleküle</b> gespalten. Bei ihrer Oxidation entstehen <b>4 ATP</b> und <b>2 NADH</b>. Bilanz: <b>netto 2 ATP</b>, 2 NADH und 2 Pyruvat.'
+  };
+  E['player:oxdecarb'] = {
+    icon: '🚪', titel: 'Pyruvat zieht um',
+    worum: 'Die zwei Pyruvat aus der Glykolyse müssen ins Mitochondrium. Dort werden sie für den Citratzyklus „zurechtgeschnitten“. Spiel die Schritte nacheinander ab – jeder wird unten im Kasten erklärt.',
+    frage: 'Was passiert mit dem Pyruvat, bevor es in den Citratzyklus darf?',
+    punkte: [
+      ['.pl-stage@3,5', 'Links: Zellplasma', 'Hier warten die zwei Pyruvat aus der Glykolyse. Jede graue Kugel ist ein C-Atom.'],
+      ['.pl-stage@50,88', 'Die Doppelmembran', 'Die zwei Membranen des Mitochondriums. Pyruvat kommt mit einem Transportprotein hindurch.'],
+      ['.pl-stage@72,5', 'Rechts: Matrix', 'Der Innenraum des Mitochondriums. Hier wird Pyruvat zu Acetyl-CoA umgebaut.'],
+      ['.pl-hud', 'Zähler', 'Wie viel CO₂ schon abgegeben und wie viele NADH-Taxis beladen wurden.'],
+      ['.pl-card', 'Die Erklärung', 'Hier wird jeder Schritt erklärt. Mit dem Knopf unten geht es weiter.']
+    ],
+    aufgaben: [
+      ['Spiel die Schritte ab, bis die Pyruvat in der Matrix sind.', 'Sie wandern mit einem Transportprotein durch beide Membranen.'],
+      ['Achte auf den <b>CO₂-Zähler</b>.', 'Jedes Pyruvat verliert ein C-Atom als CO₂ – aus C₃ wird C₂.'],
+      ['Achte auf den <b>NADH-Zähler</b>.', 'Pro Pyruvat wird ein NADH beladen – pro Glucose also 2.']
+    ],
+    ergebnis: 'Bei der <b>oxidativen Decarboxylierung</b> in der Matrix verliert jedes Pyruvat (C₃) ein C-Atom als <b>CO₂</b>. Der Rest wird oxidiert – dabei entsteht <b>NADH</b> – und an das <b>Coenzym A</b> gehängt. Das Ergebnis, <b>Acetyl-CoA</b> (C₂), ist der Brennstoff für den Citratzyklus.'
+  };
+
+  E['player:citrat'] = {
+    icon: '🎠', titel: 'Eine Runde im Karussell',
+    worum: 'Stell dir den Citratzyklus wie ein Karussell vor: Acetyl-CoA steigt ein, zwei CO₂ steigen aus, und am Ende ist der Sitz – das Oxalacetat – wieder frei. Spiel eine Runde ab; jeder Schritt wird unten erklärt.',
+    frage: 'Was entsteht in einer Runde – und wo bleibt die Energie?',
+    punkte: [
+      ['.pl-phases', 'Die drei Abschnitte', 'Einstieg – zweimal CO₂ abspalten – Oxalacetat zurückgewinnen.'],
+      ['.pl-stage@3,5', 'Die Bühne', 'Acetyl-CoA (C₂, orange umrandet) trifft auf Oxalacetat (C₄). Achte darauf, welche C-Atome den Kreis verlassen.'],
+      ['.pl-hud', 'Die Ausbeute', 'Hier zählst du mit: CO₂, NADH, FADH₂ und ATP.'],
+      ['.pl-card', 'Die Erklärung', 'Hier wird jeder Schritt erklärt. Mit dem Knopf unten geht es weiter.']
+    ],
+    aufgaben: [
+      ['Spiel den <b>Einstieg</b> ab.', 'Acetyl (C₂) + Oxalacetat (C₄) = Citrat (C₆).'],
+      ['Spiel die zwei Decarboxylierungen ab und beobachte die Zähler.', 'Zwei C-Atome verlassen den Kreis als CO₂, und zwei NADH werden beladen.'],
+      ['Spiel die Runde zu Ende.', 'Dazu kommen noch 1 NADH, 1 FADH₂ und 1 ATP – und das Oxalacetat ist wieder frei.']
+    ],
+    ergebnis: 'Pro Runde entstehen <b>2 CO₂</b>, <b>3 NADH</b>, <b>1 FADH₂</b> und <b>1 ATP</b>. Oxalacetat wird zurückgewonnen – deshalb ist es ein Kreis. Pro Glucose läuft er zweimal. Die Energie steckt danach fast vollständig in den Taxis NADH und FADH₂.'
+  };
+
+  E.atmungskette = {
+    icon: '⚡', titel: 'Die Atmungskette steuern',
+    worum: 'Du blickst auf die innere Mitochondrienmembran. Die Elektronen (türkis) aus den Taxis NADH und FADH₂ wandern durch die Komplexe bis zum Sauerstoff. Dabei werden Protonen (pink) nach oben gepumpt – und die ATP-Synthase macht daraus ATP.',
+    frage: 'Wie wird aus den Elektronen der Taxis ATP – und was passiert ohne Sauerstoff?',
+    punkte: [
+      ['btn:+ NADH einspeisen', 'Elektronen einspeisen', 'Hier gibst du beladene Taxis in die Kette: NADH liefert seine Elektronen an Komplex I, FADH₂ an Komplex II.'],
+      ['svg@13,32', 'Komplex I', 'Hier gibt NADH seine Elektronen ab (darunter steht: NADH + H⁺ → NAD⁺). Das Taxi fährt leer zurück.'],
+      ['svg@41,41', 'Die Fähren Q und Cyt c', 'Ubichinon (Q) und Cytochrom c tragen die Elektronen von Komplex zu Komplex.'],
+      ['svg@47,32', 'Die Pumpen', 'Wenn Elektronen hindurchwandern, pumpen die Komplexe I, III und IV Protonen (pink) nach oben.'],
+      ['svg@69,32', 'Komplex IV und Sauerstoff', 'Am Ende nimmt Sauerstoff die Elektronen auf. Mit Protonen entsteht Wasser: ½ O₂ + 2 H⁺ → H₂O.'],
+      ['svg@0,4', 'Intermembranraum', 'Hier oben stauen sich die gepumpten Protonen – der „Stausee“.'],
+      ['svg@85,40', 'ATP-Synthase', 'Die Turbine: Protonen strömen zurück in die Matrix, und aus ADP + Phosphat wird ATP.'],
+      ['btn:Eine Glucose einlösen', 'Eine ganze Glucose', 'Speist auf einmal alle Taxis ein, die eine Glucose liefert: 10 NADH und 2 FADH₂.'],
+      ['.stats', 'Zähler', 'Oxidierte Taxis, gepumpte Protonen, verbrauchter Sauerstoff, gebildetes Wasser und ATP – und Wärme, falls Protonen durch ein Leck fließen.'],
+      ['btn:Sauerstoff vorhanden', 'Experimente', 'Schalte den Sauerstoff ab oder gib Gifte dazu. Jedes greift an einer anderen Stelle an.']
+    ],
+    aufgaben: [
+      ['Speise ein <b>NADH</b> ein und verfolge die türkisen Elektronen.', 'Sie wandern von Komplex I über Q, Komplex III und Cytochrom c zu Komplex IV. Dabei werden Protonen nach oben gepumpt.'],
+      ['Löse <b>eine Glucose</b> ein und beobachte die Zähler (Nummer 9).', 'Es werden 6 O₂ verbraucht, 12 H₂O gebildet, und der ATP-Zähler steigt auf etwa 28.'],
+      ['Schalte unter „Experimente“ den <b>Sauerstoff</b> aus und speise noch einmal ein.', 'Komplex IV wird die Elektronen nicht mehr los. Die Kette staut sich, es wird nicht mehr gepumpt – und kein ATP mehr gebildet.']
+    ],
+    ergebnis: 'NADH und FADH₂ geben ihre Elektronen an die Atmungskette ab. Die Elektronen wandern über die Komplexe zum <b>Sauerstoff</b>, der zu Wasser wird. Mit der frei werdenden Energie <b>pumpen die Komplexe Protonen</b> in den Intermembranraum. Strömen sie durch die <b>ATP-Synthase</b> zurück, entsteht ATP – pro Glucose etwa 26–28. Ohne Sauerstoff staut sich die Kette, und die ATP-Bildung bricht zusammen.'
+  };
+
+  E.gaerung = {
+    icon: '🍺', titel: 'Notprogramm ohne Sauerstoff',
+    worum: 'Was macht eine Zelle, wenn der Sauerstoff knapp wird – im Muskel beim langen Sprint oder bei Hefe im Teig? Hier schaltest du den Sauerstoff ab und beobachtest, wie die Zelle trotzdem weiter ATP bekommt.',
+    frage: 'Wie kommt die Zelle ohne Sauerstoff an ATP – und wozu braucht sie dafür die Gärung?',
+    punkte: [
+      ['btn:Muskelzelle', 'Wer gärt?', 'Wähle eine Muskelzelle (Milchsäuregärung) oder Hefe (alkoholische Gärung).'],
+      ['btn:Sauerstoff vorhanden', 'Sauerstoff', 'Schalte den Sauerstoff aus – wie bei einem langen Sprint oder in einem verschlossenen Teig.'],
+      ['btn:Gärungsenzym', 'Gärungsenzym', 'Das Enzym, das die Elektronen von NADH auf Pyruvat überträgt. Ohne es gibt es keine Gärung.'],
+      ['svg@3,44', 'Der Weg der Glucose', 'Glucose → Glykolyse (+2 ATP) → Pyruvat. Am Pyruvat teilt sich der Weg.'],
+      ['svg@21,80', 'NAD⁺-Vorrat', 'So viele leere Taxis (NAD⁺) sind da. Die Glykolyse braucht sie – ist der Vorrat leer, steht sie still.'],
+      ['svg@74,10', 'Mit Sauerstoff', 'Pyruvat geht ins Mitochondrium, NADH wird in der Atmungskette entladen.'],
+      ['svg@74,54', 'Ohne Sauerstoff', 'Die Gärung: Pyruvat nimmt die Elektronen von NADH auf. So wird NAD⁺ wieder frei.'],
+      ['.stats', 'Zähler', 'Wie viel Glucose verbraucht wird, wie viel vom ATP-Bedarf gedeckt ist, wie viel ATP pro Glucose entsteht und welches Produkt übrig bleibt.']
+    ],
+    aufgaben: [
+      ['Schalte den <b>Sauerstoff</b> aus.', 'Pyruvat wird zu Lactat. Pro Glucose gibt es nur noch 2 ATP – die Zelle muss etwa 15-mal so viel Glucose verbrauchen.'],
+      ['Schalte zusätzlich das <b>Gärungsenzym</b> aus.', 'Der NAD⁺-Vorrat ist nach Sekunden leer, die Glykolyse steht still – kein ATP mehr.'],
+      ['Wechsle zu <b>Hefe</b> (Sauerstoff aus, Enzym an).', 'Hefe bildet Ethanol und CO₂. Das CO₂ lässt den Teig aufgehen.']
+    ],
+    ergebnis: 'Ohne Sauerstoff steht die Atmungskette still, und NADH kann nicht entladen werden. Die <b>Gärung</b> übergibt seine Elektronen an Pyruvat – so wird <b>NAD⁺</b> wieder frei, und die Glykolyse läuft weiter. Die Gärung selbst liefert kein ATP: Pro Glucose bleiben nur die <b>2 ATP der Glykolyse</b>. Im Muskel entsteht <b>Lactat</b>, bei Hefe <b>Ethanol und CO₂</b>.'
+  };
+  E.pfk = {
+    icon: '🎛️', titel: 'Die Stellschraube der Zelle',
+    worum: 'Die Zelle baut nicht mehr Glucose ab, als sie braucht. Das regelt vor allem ein Enzym der Glykolyse: die <b>Phosphofructokinase (PFK)</b>. Mit den Reglern veränderst du, was die Zelle der PFK „meldet“ – und siehst, wie schnell sie dann arbeitet.',
+    frage: 'Woher „weiß“ die PFK, ob die Zelle Energie braucht?',
+    punkte: [
+      ['.chart@7,4', 'Das Diagramm', 'Nach oben: wie schnell die PFK arbeitet. Nach rechts: wie viel Fructose-6-phosphat (ihr Ausgangsstoff) da ist.'],
+      ['.chart@68,4', 'Zwei Kurven', '<b>Gelb</b>: wenig ATP in der Zelle – die PFK arbeitet schon bei wenig Ausgangsstoff schnell. <b>Rot gestrichelt</b>: viel ATP – die PFK ist gebremst.'],
+      ['svg:not(.chart)@8,45', 'Das Enzym', 'Die PFK als Modell: Oben ist das aktive Zentrum. An der kleinen <b>Regulationsstelle</b> unten rechts docken ATP, AMP oder Citrat an und verändern die Form.'],
+      ['btn:ATP-Konzentration', 'ATP', 'Viel ATP bedeutet: Die Zelle hat genug Energie.'],
+      ['btn:AMP', 'AMP', 'AMP entsteht, wenn viel ATP verbraucht wurde – das Signal „Energie fehlt!“.'],
+      ['btn:Citrat zugeben', 'Citrat', 'Viel Citrat bedeutet: Der Citratzyklus ist schon ausgelastet.'],
+      ['btn:Fructose-6-phosphat', 'Fructose-6-phosphat', 'Der Stoff, den die PFK umsetzt. Die gestrichelte senkrechte Linie im Diagramm zeigt den eingestellten Wert.'],
+      ['.sim-out', 'Die Anzeige', 'Hier steht, wie schnell die PFK gerade arbeitet und warum.']
+    ],
+    aufgaben: [
+      ['Schieb den <b>ATP</b>-Regler hoch.', 'Die PFK wird viel langsamer: Viel ATP bremst sie – die Glykolyse läuft langsamer.'],
+      ['Gib bei viel ATP zusätzlich <b>AMP</b> dazu.', 'AMP hebt die Bremse wieder auf: Die PFK arbeitet schneller, weil Energie fehlt.'],
+      ['Setz einen Haken bei <b>Citrat zugeben</b>.', 'Auch Citrat bremst die PFK: Der Citratzyklus ist ausgelastet.']
+    ],
+    ergebnis: 'Die <b>Phosphofructokinase</b> ist das Schlüsselenzym der Glykolyse. Neben dem aktiven Zentrum hat sie eine <b>Regulationsstelle</b>. Bindet dort viel <b>ATP</b> oder <b>Citrat</b>, wird sie gebremst; <b>AMP</b> hebt die Bremse auf. Das Produkt bremst also seine eigene Herstellung – eine <b>negative Rückkopplung</b>. So bildet die Zelle genau so viel ATP, wie sie braucht.'
+  };
+
+  E.cofaktoren = {
+    icon: '🧰', titel: 'Die Werkzeuge der Enzyme',
+    worum: 'Viele Enzyme der Zellatmung brauchen kleine Helfer – Coenzyme und Mineralstoffe. Ihre Bausteine nehmen wir mit der Nahrung auf, zum Beispiel als Vitamine. Hier findest du heraus, wo jeder Helfer gebraucht wird.',
+    frage: 'Wofür braucht die Zelle Vitamine und Mineralstoffe – liefern sie Energie?',
+    punkte: [
+      ['btn:Vitamin B1', 'Die Helfer', 'Tippe auf einen Stoff aus der Nahrung. Dann leuchtet auf, wo er im Energiestoffwechsel gebraucht wird.'],
+      ['svg@3,30', 'Der Glucoseabbau', 'Die vier Abschnitte – von der Glykolyse über die Pyruvat-Dehydrogenase (oxidative Decarboxylierung) und den Citratzyklus bis zur Atmungskette.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, wozu der gewählte Stoff gebraucht wird.']
+    ],
+    aufgaben: [
+      ['Tippe auf <b>Niacin</b> und auf <b>Vitamin B2</b>.', 'Niacin ist der Baustein von NAD⁺, Vitamin B2 der von FAD – also der beiden Elektronen-Taxis.'],
+      ['Tippe auf <b>Vitamin B1</b> und auf <b>Pantothensäure</b>.', 'Beide braucht der Übergang von Pyruvat zu Acetyl-CoA: B1 im Enzym, Pantothensäure im Coenzym A.'],
+      ['Tippe auf <b>Eisen</b>, <b>Magnesium</b> und <b>Q10</b>.', 'Eisen steckt in den Komplexen der Atmungskette, Magnesium hilft Enzymen, die mit ATP arbeiten. Q10 bildet der Körper selbst.']
+    ],
+    ergebnis: 'Vitamine und Mineralstoffe liefern <b>keine Energie</b>. Sie sind Werkzeuge: Bausteine von Coenzymen wie <b>NAD⁺</b> (aus Niacin), <b>FAD</b> (aus Vitamin B2) und <b>Coenzym A</b> (aus Pantothensäure) – oder Teile von Enzymen wie das <b>Eisen</b> in der Atmungskette. Fehlt ein Helfer, wird der Abbau an dieser Stelle langsamer.'
+  };
+
+  E.nem = {
+    icon: '💊', titel: 'Werbung im Faktencheck',
+    worum: 'Energydrinks und Kapseln versprechen „mehr Energie“. Hier prüfst du die Werbung eines erfundenen Produkts mit deinem Fachwissen: Was stimmt, was ist geschickt formuliert – und was ist falsch?',
+    frage: 'Kann ein Vitaminpräparat wirklich „mehr Energie“ liefern?',
+    punkte: [
+      ['.sim-body > div:first-child', 'Die Packung', 'Das erfundene Produkt mit seinen Inhaltsstoffen. „% Referenzwert“ heißt: so viel Prozent der empfohlenen Tagesmenge stecken in einer Kapsel.'],
+      ['.match-row', 'Die Werbeaussagen', 'Fünf Sätze aus der Werbung. Entscheide bei jedem: fachlich korrekt, irreführend oder falsch. Danach bekommst du eine Rückmeldung.'],
+      ['.box.merke', 'Kriterien für dein Urteil', 'Mit diesen Fragen kannst du jedes Produkt prüfen.']
+    ],
+    aufgaben: [
+      ['Schau dir die Inhaltsstoffe auf der Packung an.', 'Mehrere Stoffe sind sehr hoch dosiert – 1000 % des Tagesbedarfs klingt viel, bringt aber nicht automatisch mehr.'],
+      ['Bewerte alle fünf Aussagen.', 'Typisch: Eine Aussage stimmt, wirkt aber übertrieben („trägt bei“). Andere sind irreführend oder falsch – etwa „mehr NAD⁺ = mehr ATP“.'],
+      ['Schreib mit den Kriterien unten ein kurzes Urteil: Würdest du das Produkt empfehlen?', 'Ein gutes Urteil nennt Fakten (Rolle im Stoffwechsel, Bedarf) und wägt Nutzen und Risiken ab.']
+    ],
+    ergebnis: 'Vitamine und Mineralstoffe werden für den normalen Stoffwechsel <b>gebraucht</b> – das stimmt. Mehr davon hilft aber nur, wenn ein <b>Mangel</b> besteht. Wer sich ausgewogen ernährt, ist meist gut versorgt; Überschüsse werden ausgeschieden oder können sogar schaden. Werbung nutzt oft Sätze, die stimmen, aber einen falschen Eindruck erwecken.'
+  };
+
+  E.giftlabor = {
+    icon: '☠️', titel: 'Gift-Labor',
+    worum: 'Gifte und manche Wirkstoffe greifen an ganz bestimmten Stellen der Atmungskette an. Wer den Angriffspunkt kennt, kann die Folgen vorhersagen. Teste jeden Stoff einzeln – schalte die anderen dafür wieder aus.',
+    frage: 'Wo greift jeder Stoff an – und was passiert dann mit ATP und Wärme?',
+    punkte: [
+      ['btn:Sauerstoff vorhanden', 'Sauerstoff', 'Ohne Sauerstoff fehlt der Endempfänger für die Elektronen.'],
+      ['btn:Cyanid', 'Cyanid', 'Ein starkes Gift. Es blockiert <b>Komplex IV</b>.'],
+      ['btn:Rotenon', 'Rotenon', 'Ein Pflanzengift, früher als Insektengift genutzt. Es blockiert <b>Komplex I</b>.'],
+      ['btn:Antimycin', 'Antimycin A', 'Ein Gift aus Bakterien. Es blockiert <b>Komplex III</b>.'],
+      ['btn:Entkoppler', 'Entkoppler', 'Macht die Membran durchlässig für Protonen – wie DNP oder das Protein UCP1 im braunen Fettgewebe.'],
+      ['btn:Oligomycin', 'Oligomycin', 'Blockiert die <b>ATP-Synthase</b> selbst.'],
+      ['btn:Eine Glucose einlösen', 'Testen', 'Nach jeder Einstellung: Taxis einspeisen und die Zähler beobachten.'],
+      ['.stats', 'Zähler', 'Vergleiche vor allem: oxidierte Taxis, verbrauchter Sauerstoff, gebildetes ATP und Wärme.']
+    ],
+    aufgaben: [
+      ['Gib <b>Cyanid</b> dazu und löse eine Glucose ein.', 'Die Kette staut sich: Es wird kein Sauerstoff verbraucht, NADH wird nicht mehr entladen, die ATP-Bildung bricht ab.'],
+      ['Nimm Cyanid weg und teste den <b>Entkoppler</b>.', 'Die Kette läuft, Sauerstoff wird verbraucht – aber viele Protonen fließen durch die Membran zurück: wenig ATP, viel Wärme.'],
+      ['Teste <b>Oligomycin</b>.', 'Kein ATP: Die Turbine ist blockiert. Die Protonen stauen sich, und bald kommen auch die Pumpen nicht mehr gegen das Gefälle an.']
+    ],
+    ergebnis: '<b>Hemmstoffe</b> wie Cyanid, Rotenon oder Antimycin A blockieren einen Komplex – die Elektronen stauen sich, es wird kein Sauerstoff mehr verbraucht und kaum ATP gebildet. <b>Oligomycin</b> blockiert die ATP-Synthase. Ein <b>Entkoppler</b> dagegen lässt die Atmungskette weiterlaufen, macht aber die Membran undicht: Die Energie des Protonengefälles wird zu <b>Wärme</b> statt zu ATP.'
+  };
+  E.blatt = {
+    icon: '🍃', titel: 'Reise in ein Blatt',
+    worum: 'Ein Laubblatt ist eine kleine Solarfabrik, und jede Schicht hat eine Aufgabe. Hier siehst du einen Querschnitt durch ein Blatt – wie unter dem Mikroskop – und vergleichst Blätter aus der Sonne mit Blättern aus dem Schatten.',
+    frage: 'Wie ist ein Blatt gebaut, damit Licht, CO₂ und Wasser zusammenkommen?',
+    punkte: [
+      ['btn:Sonnenblatt', 'Sonne oder Schatten', 'Blätter außen in der Baumkrone bekommen viel Licht, Blätter innen wenig. Vergleiche, wie unterschiedlich sie gebaut sind.'],
+      ['btn:Stoffwege zeigen', 'Stoffwege', 'Zeigt mit Pfeilen, welchen Weg Licht, CO₂, Sauerstoff und Wasserdampf nehmen.'],
+      ['svg@8,6', 'Licht', 'Fällt von oben ein – durch die Wachsschicht (Cuticula) und die durchsichtige obere Epidermis bis ins Palisadengewebe.'],
+      ['svg@40,30', 'Palisadengewebe', 'Lange Zellen voller Chloroplasten (grüne Punkte): Hier läuft die meiste Fotosynthese.'],
+      ['svg@13,64', 'Schwammgewebe', 'Lockere Zellen mit Lufträumen dazwischen (Interzellularen). Hier verteilt sich das CO₂ im Blatt.'],
+      ['svg@37,58', 'Zoom auf einen Chloroplasten', 'Der Kreis vergrößert einen Chloroplasten. Darin liegen die gestapelten Thylakoide.'],
+      ['svg@66,88', 'Spaltöffnung', 'Die Tür für Gase in der unteren Epidermis: CO₂ hinein, Sauerstoff und Wasserdampf hinaus.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, was das gewählte Blatt auszeichnet. Darunter: eine Tabelle mit Bau und Aufgabe jeder Schicht.']
+    ],
+    aufgaben: [
+      ['Lies die Schichten von oben nach unten und tippe auf die Nummern.', 'Cuticula und obere Epidermis schützen, das Palisadengewebe fängt Licht, das Schwammgewebe verteilt die Gase, die Spaltöffnungen lassen sie hinein und hinaus.'],
+      ['Schalte die <b>Stoffwege</b> ein.', 'Licht kommt von oben, CO₂ von unten durch die Spaltöffnung – beide treffen sich in den Zellen mit Chloroplasten.'],
+      ['Vergleiche <b>Sonnenblatt</b> und <b>Schattenblatt</b>.', 'Das Sonnenblatt ist dicker, mit mehrschichtigem Palisadengewebe und mehr Spaltöffnungen. Das Schattenblatt ist dünner – es lohnt sich nicht, viel Gewebe für wenig Licht zu bauen.']
+    ],
+    ergebnis: 'Im Blatt passt jede Struktur zu ihrer Aufgabe: <b>Cuticula</b> und Epidermis schützen vor Wasserverlust und lassen Licht durch. Das <b>Palisadengewebe</b> mit den meisten Chloroplasten fängt das Licht. Im <b>Schwammgewebe</b> verteilt sich das CO₂, das durch die <b>Spaltöffnungen</b> hereinkommt. Sonnenblätter sind auf viel Licht, Schattenblätter auf wenig Licht eingestellt.'
+  };
+
+  E.elodea = {
+    icon: '🫧', titel: 'Messen an der Wasserpest',
+    worum: 'Die Wasserpest (Elodea) ist eine Wasserpflanze, die im Unterricht oft für Fotosynthese-Versuche genutzt wird: Sie gibt Sauerstoff als Bläschen ab, und die kann man zählen. Hier misst du, wie Licht, CO₂ und Temperatur die Fotosynthese beeinflussen.',
+    frage: 'Wovon hängt ab, wie stark eine Pflanze Fotosynthese betreibt?',
+    punkte: [
+      ['svg@20,30', 'Die Lampe', 'Ihr Abstand bestimmt, wie viel Licht die Pflanze bekommt: je näher, desto heller.'],
+      ['svg@46,40', 'Die Wasserpest', 'Eine Wasserpflanze im Glas. Bei Fotosynthese steigen aus ihr Sauerstoff-Bläschen auf.'],
+      ['svg@69,47', 'Der Messwert', 'So viele Bläschen steigen pro Minute auf – dein Maß dafür, wie stark die Fotosynthese gerade läuft.'],
+      ['svg@69,68', 'Begrenzender Faktor', 'Zeigt, welcher Faktor die Fotosynthese gerade am meisten bremst.'],
+      ['btn:Abstand der Lampe', 'Die drei Faktoren', 'Lampenabstand (Licht), CO₂-Angebot und Wassertemperatur. Verändere immer nur <b>einen</b>!'],
+      ['btn:Versuchsreihe', 'Versuchsreihe', 'Welcher Faktor auf der x-Achse deines Diagramms stehen soll.'],
+      ['btn:Pflanzentyp', 'Pflanzentyp', 'Eine Pflanze für sonnige oder eine für schattige Standorte.'],
+      ['btn:Messwert speichern', 'Messwert speichern', 'Trägt den aktuellen Messwert als Punkt in dein Diagramm ein.'],
+      ['.chart@8,6', 'Dein Diagramm', 'Hier entsteht deine Messreihe.']
+    ],
+    aufgaben: [
+      ['Versuchsreihe <b>Licht</b>: Verändere nur den Lampenabstand und speichere fünf Messwerte.', 'Je näher die Lampe, desto mehr Bläschen – bis die Kurve abflacht. Dann bremst ein anderer Faktor.'],
+      ['Versuchsreihe <b>Temperatur</b>: Verändere nur die Wassertemperatur.', 'Es gibt ein Optimum: Wird es zu warm, sinkt die Fotosynthese wieder, weil die Enzyme Schaden nehmen.'],
+      ['Wechsle zur <b>Schattenpflanze</b> und miss die Lichtreihe noch einmal.', 'Die Schattenpflanze erreicht ihr Maximum schon bei wenig Licht – aber auf niedrigerem Niveau.']
+    ],
+    ergebnis: 'Die Fotosynthese hängt von <b>Licht</b>, <b>CO₂</b> und <b>Temperatur</b> ab. Erhöht man einen Faktor, steigt sie – bis ein anderer Faktor knapp wird: der <b>begrenzende Faktor</b>. Bei der Temperatur gibt es ein <b>Optimum</b>, weil die Enzyme bei zu viel Wärme geschädigt werden. Für jedes Experiment gilt: immer nur einen Faktor verändern.'
+  };
+
+  E.stoma = {
+    icon: '💨', titel: 'Verhungern oder verdursten?',
+    worum: 'Jede Spaltöffnung ist ein Kompromiss: Ist sie offen, kommt CO₂ für die Fotosynthese hinein – aber Wasser verdunstet. Ist sie zu, spart die Pflanze Wasser – bekommt aber kein CO₂. Hier regelst du Licht und Wasser und siehst, wie die Schließzellen reagieren.',
+    frage: 'Wie entscheidet die Pflanze zwischen CO₂-Aufnahme und Wasserverlust?',
+    punkte: [
+      ['svg@14,8', 'Die Schließzellen', 'Zwei bohnenförmige Zellen in der unteren Epidermis, von oben gesehen. Zwischen ihnen liegt der Spalt.'],
+      ['svg@19,40', 'Ionen und Wasser', 'Die Punkte sind Kalium- und Chlorid-Ionen. Strömen sie in die Schließzellen, folgt Wasser: Die Zellen schwellen an, und der Spalt öffnet sich.'],
+      ['svg@60,20', 'CO₂-Aufnahme', 'Wie viel CO₂ ins Blatt gelangt – und damit, wie gut Fotosynthese möglich ist.'],
+      ['svg@60,47', 'Wasserverlust', 'Wie viel Wasserdampf durch den Spalt entweicht.'],
+      ['btn:Licht', 'Licht', 'Licht ist das Signal „Jetzt lohnt sich Fotosynthese“.'],
+      ['btn:Wasserversorgung', 'Wasser', 'Wie gut die Pflanze gerade mit Wasser versorgt ist.'],
+      ['btn:Abscisinsäure', 'Abscisinsäure', 'Ein Pflanzenhormon, das bei Trockenheit gebildet wird.']
+    ],
+    aufgaben: [
+      ['Dreh das <b>Licht</b> herunter.', 'Der Spalt schließt sich: Ohne Licht lohnt sich keine Fotosynthese, also spart die Pflanze Wasser.'],
+      ['Licht wieder hoch – und die <b>Wasserversorgung</b> herunter.', 'Trotz Licht schließt sich der Spalt: Wasser sparen geht vor. Die CO₂-Aufnahme sinkt.'],
+      ['Setz den Haken bei <b>Abscisinsäure</b>.', 'Das Trockenstress-Hormon schließt die Spaltöffnung – auch wenn genug Licht da ist.']
+    ],
+    ergebnis: 'Die Spaltöffnungen regeln den <b>Gasaustausch</b>. Strömen Ionen in die <b>Schließzellen</b>, folgt Wasser, die Zellen schwellen an, und der Spalt öffnet sich. Licht öffnet die Spalten, Trockenheit und das Hormon <b>Abscisinsäure</b> schließen sie. Sind sie zu, wird <b>CO₂ zum begrenzenden Faktor</b> der Fotosynthese.'
+  };
+
+  E.chromato = {
+    icon: '🧪', titel: 'Farbstoffe trennen',
+    worum: 'Ein grünes Blatt enthält nicht nur einen Farbstoff, sondern mehrere. Mit der <b>Chromatografie</b> kann man sie trennen – ein typischer Schulversuch. Hier führst du ihn virtuell durch.',
+    frage: 'Welche Farbstoffe stecken in einem grünen Blatt?',
+    punkte: [
+      ['btn:Blätter mörsern', 'Drei Schritte', 'So läuft der Versuch ab: ① Blätter mit Sand und Lösungsmittel zerreiben, ② einen Tropfen Extrakt auf die Startlinie geben, ③ das Laufmittel aufsteigen lassen.'],
+      ['btn:Laufmittel: Petroleumbenzin', 'Das Laufmittel', 'Die Flüssigkeit, die in der Platte nach oben steigt und die Farbstoffe mitnimmt. Zum Vergleich gibt es Wasser.'],
+      ['btn:Pigmente benennen', 'Namen anzeigen', 'Blendet die Namen der Farbstoffe an den Banden ein.'],
+      ['svg@10,62', 'Der Mörser', 'Hier werden die Blätter zerrieben, damit sich die Farbstoffe herauslösen.'],
+      ['svg@38,10', 'Die Platte', 'Eine Kieselgel-Platte in einem Glasgefäß. Darauf trennen sich die Farbstoffe.'],
+      ['svg~Startlinie@38,84', 'Die Startlinie', 'Hier wird der Blattextrakt aufgetragen. Von hier aus wandern die Farbstoffe unterschiedlich weit.'],
+      ['.eq', 'Der Rf-Wert', 'Laufstrecke des Farbstoffs geteilt durch Laufstrecke des Laufmittels. So lassen sich Farbstoffe vergleichen.']
+    ],
+    aufgaben: [
+      ['Führe die Schritte ① bis ③ nacheinander aus.', 'Das Laufmittel steigt nach oben und trennt den grünen Fleck in mehrere farbige Banden.'],
+      ['Setz den Haken bei <b>Pigmente benennen</b>.', 'Du siehst Chlorophyll a (blaugrün), Chlorophyll b (gelbgrün) und gelb-orange Carotinoide – jeder Farbstoff ist unterschiedlich weit gewandert.'],
+      ['Wiederhole den Versuch mit <b>Wasser</b> als Laufmittel.', 'Die Farbstoffe bleiben fast an der Startlinie: Sie lösen sich nicht in Wasser.']
+    ],
+    ergebnis: 'Blätter enthalten mehrere Farbstoffe: <b>Chlorophyll a</b>, <b>Chlorophyll b</b> und gelb-orange <b>Carotinoide</b>. In der Chromatografie wandern sie unterschiedlich weit, weil sie sich verschieden gut im Laufmittel lösen und unterschiedlich stark an der Platte haften. Der <b>Rf-Wert</b> hilft, sie zu erkennen.'
+  };
+
+  E.spektrum = {
+    icon: '🌈', titel: 'Welches Licht nutzt die Pflanze?',
+    worum: 'Sonnenlicht besteht aus vielen Farben. Hier findest du heraus, welche davon die Blattfarbstoffe schlucken – und ob genau dieses Licht die Fotosynthese antreibt. Dazu gibt es drei Ansichten: Messkurven, einen berühmten Versuch und einen Blick ins Chlorophyll.',
+    frage: 'Welche Lichtfarben treiben die Fotosynthese an – und warum sind Blätter grün?',
+    punkte: [
+      ['btn:① Spektren', 'Drei Ansichten', '① die Messkurven der Farbstoffe, ② der Versuch von Engelmann, ③ was das Licht im Chlorophyll bewirkt.'],
+      ['.chart@6,4', 'Das Diagramm', 'Nach oben: wie stark ein Farbstoff Licht schluckt (Absorption). Nach rechts: die Lichtfarbe als Wellenlänge, von Violett (400 nm) bis Rot (700 nm).'],
+      ['.chart@25,91', 'Die Farben', 'Der Regenbogenstreifen zeigt, welche Farbe zu welcher Wellenlänge gehört. Grün liegt bei etwa 500 bis 570 nm.'],
+      ['input[type=range]', 'Wellenlänge', 'Wähle eine Lichtfarbe. Die gestrichelte Linie zeigt sie im Diagramm, unten steht, wie viel jeder Farbstoff davon schluckt.'],
+      ['btn:Chlorophyll a', 'Die Farbstoffe', 'Blende die Kurven von Chlorophyll a, Chlorophyll b und β-Carotin ein oder aus.'],
+      ['btn:Wirkungsspektrum', 'Wirkungsspektrum', 'Zeigt, wie stark die Fotosynthese bei jeder Lichtfarbe läuft. Vergleiche es mit den Kurven der Farbstoffe!'],
+      ['svg~Fadenalge@6,12', 'Bakterien', 'Die Punkte sind Bakterien, die Sauerstoff brauchen. Sie schwimmen dorthin, wo viel Sauerstoff entsteht.'],
+      ['svg~Fadenalge@4,56', 'Die Fadenalge', 'Eine lange, fadenförmige Alge. Wo sie Fotosynthese betreibt, gibt sie Sauerstoff ab.'],
+      ['svg~Fadenalge@4,74', 'Zerlegtes Licht', 'Licht, das durch ein Prisma in seine Farben zerlegt wurde. Jeder Abschnitt der Alge bekommt eine andere Farbe.'],
+      ['svg~Grundzustand@8,85', 'Das Elektron', 'Ein Elektron im Chlorophyll. Im Grundzustand hat es wenig Energie.'],
+      ['svg~Grundzustand@8,14', 'Angeregte Zustände', 'Schluckt das Chlorophyll ein Photon (ein Lichtteilchen), springt das Elektron auf ein höheres Energieniveau.'],
+      ['svg~Grundzustand@86,14', 'Das Fotosystem', 'Viele Farbstoffe sammeln das Licht und geben die Energie an das spezielle Chlorophyll-Paar in der Mitte (P680) weiter.'],
+      ['btn:blaues Photon', 'Photonen', 'Schicke Licht verschiedener Farben auf das Chlorophyll.']
+    ],
+    aufgaben: [
+      ['Schieb die <b>Wellenlänge</b> langsam von 400 bis 700 nm.', 'Die Chlorophylle schlucken vor allem Blau und Rot – im Grünen fast nichts.'],
+      ['Blende das <b>Wirkungsspektrum</b> ein.', 'Die Fotosynthese ist dort stark, wo die Farbstoffe viel Licht schlucken: im Blauen und im Roten.'],
+      ['Wechsle zu ② und schalte das <b>Licht durch das Prisma</b> ein.', 'Die Bakterien sammeln sich im blauen und roten Licht – dort gibt die Alge am meisten Sauerstoff ab.'],
+      ['Wechsle zu ③ und schick ein blaues, ein grünes und ein rotes Photon.', 'Blau und Rot heben das Elektron an. Grünes Licht wird kaum geschluckt – das Elektron bleibt unten.']
+    ],
+    ergebnis: 'Chlorophylle schlucken vor allem <b>blaues und rotes</b> Licht. <b>Grünes</b> Licht wird kaum geschluckt, sondern zurückgeworfen – deshalb sehen Blätter grün aus. Das <b>Wirkungsspektrum</b> der Fotosynthese verläuft fast wie das <b>Absorptionsspektrum</b>: Nur geschlucktes Licht kann ein Elektron im Chlorophyll anregen und so die Fotosynthese antreiben. Engelmann hat das schon um 1880 mit Bakterien gezeigt.'
+  };
+
+  E['3d:chloro'] = {
+    icon: '🧊', titel: 'Der Chloroplast in 3D',
+    worum: 'Ein Chloroplast ist nur etwa 5–10 µm lang – hier kannst du ihn drehen und aufschneiden. <b>So geht’s:</b> Ziehen dreht das Modell, der Regler „Aufschneiden“ öffnet es, und die <b>Nummern im Modell</b> (oder die Begriffe darunter) erklären dir jede Struktur.',
+    frage: 'Wo im Chloroplasten läuft die Fotoreaktion – und wo der Calvin-Zyklus?',
+    aufgaben: [
+      ['Schneide das Modell auf und dreh es.', 'Innen siehst du die Thylakoide, oft gestapelt wie Geldrollen (Grana), umgeben vom Stroma.'],
+      ['Tippe im Modell auf alle Nummern.', 'Jede Nummer erklärt eine Struktur – von der doppelten Hülle bis zu den Stärkekörnern.'],
+      ['Starte das <b>Quiz</b>.', 'Jetzt findest du die Strukturen selbst – ohne Beschriftung.']
+    ],
+    ergebnis: 'Der Chloroplast hat eine <b>doppelte Hülle</b>. Innen liegen die <b>Thylakoide</b>; in ihrer Membran sitzen Farbstoffe, Fotosysteme und ATP-Synthase – hier läuft die <b>Fotoreaktion</b>. Die Flüssigkeit drumherum, das <b>Stroma</b>, enthält die Enzyme des <b>Calvin-Zyklus</b>, eigene DNA, Ribosomen und Stärkekörner.'
+  };
+  E.fotoreaktion = {
+    icon: '☀️', titel: 'Licht an der Thylakoidmembran',
+    worum: 'Du blickst auf die Thylakoidmembran im Chloroplasten. Licht treibt hier Elektronen (türkis) vom Wasser bis zum NADP⁺. Dabei sammeln sich Protonen (pink) im Innenraum – und die ATP-Synthase bildet ATP.',
+    frage: 'Wie macht die Pflanze aus Licht und Wasser NADPH, ATP und Sauerstoff?',
+    punkte: [
+      ['btn:① Membran-Ansicht', 'Zwei Ansichten', '① zeigt, wo die Bausteine in der Membran sitzen. ② zeigt dieselben Schritte als Energiediagramm (Z-Schema).'],
+      ['svg@0,3', 'Oben: Stroma', 'Die Flüssigkeit im Chloroplasten. Hier kommen NADPH und ATP an – für den Calvin-Zyklus.'],
+      ['svg@14,32', 'Fotosystem II', 'Licht (gelbe Blitze) regt hier Elektronen an. Die Lücke wird mit Elektronen aus Wasser gefüllt.'],
+      ['svg@5,80', 'Wasserspaltung', 'Hier wird Wasser gespalten: Es entstehen Sauerstoff, Protonen und die Elektronen für die Kette.'],
+      ['svg@33,31', 'Cytochrom-Komplex', 'Die Elektronen kommen über Plastochinon (PQ) hierher. Der Komplex pumpt dabei Protonen in den Innenraum.'],
+      ['svg@55,32', 'Fotosystem I', 'Plastocyanin (PC) bringt die Elektronen hierher. Licht gibt ihnen einen zweiten Energieschub.'],
+      ['svg@76,30', 'NADPH entsteht', 'Über Ferredoxin (Fd) kommen die Elektronen zur NADP⁺-Reduktase: NADP⁺ wird zu NADPH.'],
+      ['svg@89,30', 'ATP-Synthase', 'Die Protonen strömen aus dem Innenraum zurück ins Stroma – dabei entsteht ATP.'],
+      ['svg@0,90', 'Unten: Thylakoidinnenraum', 'Hier stauen sich die Protonen (pink). Der pH-Wert sinkt – es wird sauer.'],
+      ['btn:Licht an', 'Experimente', 'Schalte das Licht aus, mach die Membran undicht (Entkoppler) oder blockiere die Kette mit einem Unkrautvernichter (DCMU).'],
+      ['.stats', 'Zähler', 'Freigesetzter Sauerstoff, gebildetes NADPH und ATP, gepumpte Protonen und der pH-Wert im Innenraum.']
+    ],
+    aufgaben: [
+      ['Lass das Licht an und verfolge die türkisen Elektronen.', 'Sie wandern vom Wasser über Fotosystem II, den Cytochrom-Komplex und Fotosystem I bis zum NADP⁺. Sauerstoff, NADPH und ATP nehmen zu.'],
+      ['Schalte das <b>Licht</b> aus.', 'Alles bleibt stehen: Ohne Licht werden keine Elektronen angeregt – kein Sauerstoff, kein NADPH, kein ATP.'],
+      ['Licht an – und das <b>Herbizid (DCMU)</b> dazu.', 'Die Elektronen kommen nicht mehr von Fotosystem II weiter: Die Kette steht, es entsteht kein NADPH und kaum ATP. So wirken manche Unkrautvernichter.'],
+      ['Herbizid weg – teste den <b>Entkoppler</b>.', 'NADPH entsteht weiter, aber die Protonen fließen durch die Membran zurück: kaum noch ATP.']
+    ],
+    ergebnis: 'Licht regt in <b>Fotosystem II</b> Elektronen an; ersetzt werden sie aus <b>Wasser</b>, das dabei gespalten wird – es entsteht <b>Sauerstoff</b>. Die Elektronen wandern über eine Transportkette zu <b>Fotosystem I</b>, werden erneut angeregt und landen schließlich bei NADP⁺: Es entsteht <b>NADPH</b>. Unterwegs werden Protonen in den Thylakoidinnenraum gepumpt; ihr Rückstrom durch die <b>ATP-Synthase</b> liefert <b>ATP</b>. NADPH und ATP braucht der Calvin-Zyklus.'
+  };
+
+  E.hill = {
+    icon: '🧪', titel: 'Der Hill-Versuch',
+    worum: 'Robert Hill zeigte 1937, dass isolierte Chloroplasten im Licht Wasser spalten können – auch ganz ohne CO₂. Als Elektronenempfänger nahm er einen Stoff, der dabei seine Farbe ändert. Diesen Versuch stellst du hier mit vier Reagenzgläsern nach.',
+    frage: 'Woher stammen die Elektronen der Fotoreaktion – und braucht man dafür CO₂?',
+    punkte: [
+      ['svg@8,8', 'Vier Reagenzgläser', 'Vier Ansätze mit unterschiedlichem Inhalt. Die Farbe zeigt am Ende, ob Elektronen übertragen wurden.'],
+      ['table.t@0,6', 'Die Ansätze', 'Hier legst du mit Häkchen fest, was in welches Glas kommt.'],
+      ['table.t@0,36', 'Rotes Blutlaugensalz', 'Ein künstlicher Elektronenempfänger. Nimmt es Elektronen auf, wird daraus <b>gelbes</b> Blutlaugensalz.'],
+      ['table.t@0,88', 'Der Nachweis', 'Eisen(III)-chlorid färbt sich mit gelbem Blutlaugensalz tiefblau („Berliner Blau“). So sieht man, ob Elektronen übertragen wurden.'],
+      ['btn:Belichten', 'Starten', 'Belichtet die Ansätze und gibt am Ende Eisen(III)-chlorid zu.'],
+      ['btn:Standardansätze', 'Standardansätze', 'Lädt die vier klassischen Ansätze des Versuchs.'],
+      ['.eq', 'Die Gleichungen', 'Oben: was in der Pflanze passiert. Unten: das Modell im Reagenzglas.']
+    ],
+    aufgaben: [
+      ['Lade die <b>Standardansätze</b> und sag vorher: In welchem Glas wird es blau?', 'Nur dort, wo Chloroplasten, rotes Blutlaugensalz und Licht zusammenkommen, können Elektronen übertragen werden.'],
+      ['Starte den Versuch.', 'Ansatz 1 wird blau. Ansatz 4 auch – dort war von Anfang an gelbes Blutlaugensalz drin (Vergleichsprobe). Ohne Licht oder ohne Chloroplasten bleibt es unverändert.'],
+      ['Überleg: Woher kamen die Elektronen, obwohl kein CO₂ im Glas war?', 'Aus dem Wasser – es wird im Licht gespalten, dabei entsteht Sauerstoff.']
+    ],
+    ergebnis: 'Isolierte Chloroplasten übertragen im <b>Licht</b> Elektronen auf einen künstlichen Empfänger – ganz <b>ohne CO₂</b>. Die Elektronen stammen aus dem <b>Wasser</b>, das dabei gespalten wird; Sauerstoff wird frei. Die Fotoreaktion läuft also unabhängig von der CO₂-Fixierung: Sie liefert erst die Energieträger, die der Calvin-Zyklus danach verbraucht.'
+  };
+
+  E.jagendorf = {
+    icon: '🧪', titel: 'ATP im Dunkeln?',
+    worum: 'André Jagendorf wollte 1966 wissen: Reicht ein Protonengefälle allein, um ATP zu bilden – ganz ohne Licht? Dazu legte er Thylakoide erst in Säure und brachte sie dann plötzlich in eine basische Lösung. Hier machst du seinen Versuch im Dunkeln nach.',
+    frage: 'Entsteht ATP, wenn nur ein Protonengefälle da ist – ganz ohne Licht?',
+    punkte: [
+      ['svg@0,5', 'Oben: Thylakoidinnenraum', 'Hier sammeln sich die H⁺, wenn ein Gefälle entsteht.'],
+      ['svg@2,47', 'Die Thylakoidmembran', 'Für H⁺ ist sie dicht – zurück kommen sie nur durch die ATP-Synthase.'],
+      ['svg@20,38', 'Die Pumpe', 'Im Licht pumpt der Elektronentransport H⁺ nach oben. Hier steht sie auf 0 % – es ist dunkel!'],
+      ['svg@69,47', 'ATP-Synthase', 'Strömen H⁺ hindurch, entsteht ATP.'],
+      ['svg@0,93', 'Unten: Stroma', 'Hier entsteht das ATP.'],
+      ['btn:pH 4 vorbehandeln', 'Der Säure-Sprung', 'Die Thylakoide liegen erst in saurer Lösung (pH 4): Ihr Innenraum füllt sich mit H⁺. Dann kommen sie plötzlich in basische Lösung (pH 8) mit ADP und Phosphat.'],
+      ['btn:Membran undicht', 'Entkoppler', 'Macht die Membran durchlässig für H⁺.'],
+      ['.stats', 'Zähler', 'H⁺ oben und unten, gebildetes ATP und Wärme.']
+    ],
+    aufgaben: [
+      ['Lass die Pumpe auf 0 % (dunkel) und beobachte den ATP-Zähler.', 'Nichts passiert: Ohne Licht wird nicht gepumpt – kein Gefälle, kein ATP.'],
+      ['Starte den <b>Säure-Sprung</b>.', 'Plötzlich sind innen viel mehr H⁺ als außen. Sie strömen durch die ATP-Synthase – es entsteht ATP, obwohl es dunkel ist!'],
+      ['Wiederhole den Säure-Sprung mit <b>undichter Membran</b>.', 'Die H⁺ fließen durch die Membran ab: kaum ATP. Das Gefälle muss durch die ATP-Synthase fließen.']
+    ],
+    ergebnis: 'Ein <b>Protonengefälle allein</b> reicht, um die ATP-Synthase anzutreiben – Licht braucht man nur, um dieses Gefälle aufzubauen. Damit war das <b>Staudamm-Prinzip</b> (Chemiosmose) auch für den Chloroplasten bewiesen.'
+  };
+
+  E['player:calvin'] = {
+    icon: '🔁', titel: 'Du bist das Stroma',
+    worum: 'Du bist das Stroma des Chloroplasten. Drei Moleküle RuBP warten auf CO₂ aus der Luft. Mit ATP und NADPH aus der Fotoreaktion baust du daraus Zucker. Die C-Atome aus dem CO₂ sind orange umrandet – so kannst du sie verfolgen. Jeder Schritt wird unten erklärt.',
+    frage: 'Wie wird aus CO₂ Zucker – und was kostet das?',
+    punkte: [
+      ['.pl-phases', 'Die vier Abschnitte', 'Fixierung – Reduktion – Zucker ausschleusen – RuBP zurückgewinnen (Regeneration).'],
+      ['.pl-stage@3,5', 'Die Bühne', 'Hier sind deine Moleküle. Graue Kugeln sind C-Atome, „P“ sind Phosphatgruppen. Orange umrandet: C-Atome aus dem CO₂.'],
+      ['.pl-hud', 'Zähler', 'Wie viel CO₂ fixiert und wie viel ATP und NADPH verbraucht wurden.'],
+      ['.pl-card', 'Die Erklärung', 'Hier wird jeder Schritt erklärt. Mit dem Knopf unten geht es weiter.'],
+      ['btn:Schnelldurchlauf', 'Abkürzung', 'Spielt alle Schritte nacheinander ab. Mit „Neustart“ beginnst du von vorn.']
+    ],
+    aufgaben: [
+      ['Spiel die <b>Fixierung</b> ab.', 'RubisCO hängt je ein CO₂ an RuBP (C₅). Das Produkt zerfällt sofort in zwei C₃-Moleküle (3-Phosphoglycerat).'],
+      ['Spiel die <b>Reduktion</b> ab und beobachte die Zähler.', 'ATP und NADPH werden verbraucht: Aus 3-Phosphoglycerat wird das energiereiche GAP.'],
+      ['Spiel bis zum Ende und zähle: Wie viel GAP verlässt den Kreis?', 'Aus 3 CO₂ entsteht 1 GAP für die Pflanze. Der Rest wird mit weiterem ATP zu RuBP zurückgebaut.']
+    ],
+    ergebnis: 'Im Calvin-Zyklus wird CO₂ in drei Abschnitten zu Zucker: <b>Fixierung</b> (RubisCO bindet CO₂ an RuBP), <b>Reduktion</b> (mit ATP und NADPH entsteht GAP) und <b>Regeneration</b> (RuBP wird zurückgewonnen). Für eine Glucose braucht es <b>6 CO₂, 18 ATP und 12 NADPH</b>.'
+  };
+
+  E.calvinlabor = {
+    icon: '☢️', titel: 'Im Labor von Melvin Calvin',
+    worum: 'Wie hat man herausgefunden, in welcher Reihenfolge die Schritte des Calvin-Zyklus ablaufen? Melvin Calvin gab Algen radioaktiv markiertes CO₂ und tötete sie nach wenigen Sekunden ab. Dann sah er nach, in welchen Stoffen die Radioaktivität steckte.',
+    frage: 'In welchen Stoff wird CO₂ als Erstes eingebaut?',
+    punkte: [
+      ['btn:① ¹⁴C-Tracer-Versuch', 'Zwei Versuche', '① Mit radioaktivem CO₂ verfolgt man, wohin der Kohlenstoff wandert. ② zeigt, was passiert, wenn das Licht aus- oder das CO₂ wegfällt.'],
+      ['svg~Startpunkt@6,6', 'Das Chromatogramm', 'Die Stoffe aus den Algen wurden aufgetrennt. Jeder Fleck ist ein Stoff – je dunkler, desto mehr Radioaktivität.'],
+      ['svg~Startpunkt@90,88', 'Startpunkt', 'Hier wurde die Probe aufgetragen. Von hier wandern die Stoffe in zwei Richtungen auseinander.'],
+      ['input[type=range]', 'Die Zeit', 'Wie lange die Algen nach der Zugabe des radioaktiven CO₂ gelebt haben, bevor sie abgetötet wurden.'],
+      ['.sim-out', 'Die Auswertung', 'Hier steht, wo die Radioaktivität gerade steckt.'],
+      ['btn:bei 40 s: Licht aus', 'Zwei Störungen', 'Bei 40 Sekunden wird entweder das Licht ausgeschaltet oder das CO₂ entzogen.'],
+      ['svg~Konzentration@8,6', 'Das Diagramm', 'Wie viel 3-Phosphoglycerat (orange) und RuBP (grün) in den Algen vorhanden ist – über die Zeit.']
+    ],
+    aufgaben: [
+      ['Stell die Zeit auf <b>5 s</b>.', 'Die Radioaktivität steckt fast nur im 3-Phosphoglycerat – das erste Produkt der CO₂-Fixierung.'],
+      ['Stell die Zeit auf <b>60 s</b>.', 'Jetzt sind viele Flecken radioaktiv: Der Kohlenstoff ist in weitere Zucker gewandert.'],
+      ['Wechsle zu ② und wähle <b>Licht aus</b>.', 'RuBP nimmt ab, 3-Phosphoglycerat häuft sich an: Die Fixierung läuft weiter, aber ohne ATP und NADPH stockt die Reduktion.'],
+      ['Wähle <b>CO₂ entziehen</b>.', 'Jetzt umgekehrt: RuBP häuft sich an, 3-Phosphoglycerat nimmt ab – ohne CO₂ wird RuBP nicht mehr verbraucht.']
+    ],
+    ergebnis: 'Das erste stabile Produkt der CO₂-Fixierung ist <b>3-Phosphoglycerat</b>. Mit der Zeit wandert der Kohlenstoff in weitere Zucker. Licht aus lässt 3-Phosphoglycerat ansteigen und RuBP sinken; CO₂-Entzug bewirkt das Gegenteil. Daraus ergibt sich die Reihenfolge: <b>RuBP + CO₂ → 3-Phosphoglycerat → (mit ATP und NADPH) → Zucker</b>, und RuBP wird zurückgewonnen.'
+  };
+
+  E.starkSchwach = {
+    icon: '🌡️', titel: 'Licht oder Temperatur?',
+    worum: 'Zwei Messreihen im Vergleich: Bei viel und bei wenig Licht wurde gemessen, wie die Fotosynthese von der Temperatur abhängt. Die beiden Kurven sehen ganz unterschiedlich aus – warum?',
+    frage: 'Warum hilft Wärme der Pflanze nur, wenn genug Licht da ist?',
+    punkte: [
+      ['.chart@7,4', 'Das Diagramm', 'Nach oben: wie stark die Fotosynthese läuft. Nach rechts: die Temperatur.'],
+      ['.chart@64,18', 'Starklicht', 'Viel Licht: Die Kurve steigt mit der Temperatur bis zu einem Optimum und fällt dann steil ab.'],
+      ['.chart@80,52', 'Schwachlicht', 'Wenig Licht: Die Kurve bleibt flach – die Temperatur ändert kaum etwas.'],
+      ['.sim-out', 'Die Erklärung', 'Hier steht, welcher Faktor jeweils begrenzt.']
+    ],
+    aufgaben: [
+      ['Vergleiche die beiden Kurven zwischen 0 und 30 °C.', 'Bei Starklicht steigt die Fotosynthese mit der Temperatur deutlich, bei Schwachlicht kaum.'],
+      ['Schau auf den Bereich über 30 °C.', 'Bei Starklicht fällt die Kurve nach dem Optimum steil ab: Die Enzyme werden durch Hitze geschädigt.'],
+      ['Lies die Erklärung unter dem Diagramm.', 'Bei Schwachlicht begrenzt das Licht (Fotoreaktion), bei Starklicht begrenzen die Enzyme des Calvin-Zyklus – und die hängen von der Temperatur ab.']
+    ],
+    ergebnis: 'Bei <b>Schwachlicht</b> ist das Licht der begrenzende Faktor: Die Fotoreaktion hängt kaum von der Temperatur ab, deshalb bleibt die Kurve flach. Bei <b>Starklicht</b> begrenzen die <b>Enzyme des Calvin-Zyklus</b>: Sie werden mit steigender Temperatur schneller – bis zu einem <b>Optimum</b>, danach nehmen sie Schaden. Mehr Wärme bringt also nur etwas, wenn genug Licht da ist.'
+  };
+
+  E.o18 = {
+    icon: '⚛️', titel: 'Woher stammt der Sauerstoff?',
+    worum: 'Stammt der Sauerstoff, den Pflanzen abgeben, aus dem Wasser oder aus dem CO₂? Das wurde in den 1940er-Jahren mit schwerem Sauerstoff (¹⁸O) als „Etikett“ herausgefunden. Du machst den Versuch mit der Grünalge Chlorella nach.',
+    frage: 'Stammt der Sauerstoff aus dem Wasser oder aus dem CO₂?',
+    punkte: [
+      ['btn:H₂¹⁸O + C¹⁶O₂', 'Zwei Ansätze', 'Links ist das <b>Wasser</b> markiert, rechts das <b>CO₂</b>. „Markiert“ heißt: Es enthält schweren Sauerstoff (¹⁸O), den man messen kann.'],
+      ['btn:Chlorella belichten', 'Messen', 'Die Algen werden belichtet. Ein Massenspektrometer prüft, ob der abgegebene Sauerstoff schwer ist.'],
+      ['.meter', 'Das Messergebnis', 'Wie viel des freigesetzten Sauerstoffs schwer (¹⁸O) ist.'],
+      ['.eq', 'Die Gleichung', 'Rot markiert: der schwere Sauerstoff. Wo taucht er am Ende auf?']
+    ],
+    aufgaben: [
+      ['Miss den Ansatz mit <b>markiertem Wasser</b>.', 'Der freigesetzte Sauerstoff ist markiert.'],
+      ['Miss den Ansatz mit <b>markiertem CO₂</b>.', 'Der freigesetzte Sauerstoff ist nicht markiert.'],
+      ['Was folgt daraus?', 'Der Sauerstoff stammt aus dem Wasser – er entsteht bei der Wasserspaltung an Fotosystem II.']
+    ],
+    ergebnis: 'Der Sauerstoff, den Pflanzen abgeben, stammt aus dem <b>Wasser</b>, nicht aus dem CO₂. Er entsteht bei der <b>Wasserspaltung</b> an Fotosystem II. Deshalb steht in der Gleichung der Fotosynthese <b>12 H₂O</b>: Alle 6 O₂ kommen aus dem Wasser; der Sauerstoff aus dem CO₂ landet im Zucker und im neu gebildeten Wasser.'
+  };
+
+  E.vergleich = {
+    icon: '⚖️', titel: 'Zwei Kraftwerke, ein Prinzip',
+    worum: 'Mitochondrium und Chloroplast sind die beiden Kraftwerke der Zelle. Auf den ersten Blick machen sie Gegensätzliches – das eine baut ab, das andere auf. Doch sie arbeiten nach demselben Prinzip. Hier stehen beide nebeneinander.',
+    frage: 'Was haben Atmungskette und Fotoreaktion gemeinsam – und was ist spiegelbildlich?',
+    punkte: [
+      ['svg@3,8', 'Mitochondrium', 'Links: die innere Mitochondrienmembran mit der Atmungskette.'],
+      ['svg~Thylakoid@3,8', 'Chloroplast', 'Rechts: die Thylakoidmembran mit der Fotoreaktion.'],
+      ['table.t@0,3', 'Der Vergleich', 'Zeile für Zeile: Was ist gleich, was ist spiegelbildlich?'],
+      ['.sim-out', 'Das Fazit', 'Die wichtigste Gemeinsamkeit in einem Absatz.']
+    ],
+    aufgaben: [
+      ['Vergleiche die beiden Bilder oben.', 'Beide Membranen haben eine Elektronentransportkette, Protonenpumpen und eine ATP-Synthase.'],
+      ['Lies in der Tabelle: Woher kommen die Elektronen, wohin gehen sie?', 'Mitochondrium: aus der Nahrung (NADH) zum Sauerstoff. Chloroplast: aus dem Wasser zum NADP⁺ – genau umgekehrt.'],
+      ['Lies: Wohin werden die Protonen gepumpt, und wo entsteht ATP?', 'Mitochondrium: in den Intermembranraum, ATP entsteht in der Matrix. Chloroplast: in den Thylakoidinnenraum, ATP entsteht im Stroma.']
+    ],
+    ergebnis: 'Beide Organellen nutzen das <b>Staudamm-Prinzip</b> (Chemiosmose): Elektronentransport pumpt Protonen über eine dichte Membran, ihr Rückstrom durch die ATP-Synthase bildet ATP. Spiegelbildlich sind <b>Energiequelle</b> (Nahrung bzw. Licht), <b>Elektronenquelle</b> (NADH bzw. Wasser) und <b>Endempfänger</b> (Sauerstoff bzw. NADP⁺). Wasser wird im Mitochondrium gebildet, im Chloroplasten gespalten.'
+  };
 })();
 
 </script>
@@ -8810,7 +9643,7 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
       ]
     },
     erleben: [
-      { kind: 'sim', id: 'gradient', key: 'gradient', titel: 'Der Protonen-Staudamm', intro: 'Pumpe an, Pumpe aus, Membran undicht machen, Säure-Sprung: Finde heraus, was die ATP-Synthase wirklich antreibt.' }
+      { kind: 'sim', id: 'gradient', key: 'gradient', opts: { pumpSrc: 'Energie: aus der Atmungskette oder aus Licht' }, titel: 'Der Protonen-Staudamm', intro: 'Pumpe an, Pumpe aus, Membran undicht machen, Säure-Sprung: Finde heraus, was die ATP-Synthase wirklich antreibt.' }
     ],
     karten: ['s1-5'],
     schleuse: {
@@ -9139,7 +9972,7 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
       { kind: 'sim', id: 'pfk', key: 'pfk', titel: 'Die PFK steuern', intro: 'Regle die Mengen von ATP, AMP und Citrat und beobachte, wie schnell die PFK arbeitet. Wann bremst sie, wann gibt sie Gas?' },
       { kind: 'sim', id: 'cofaktoren', key: 'cofaktoren', st: 's2-10', titel: 'Welche Helfer braucht die Zellatmung?', intro: 'Ordne Vitamine und Mineralstoffe den Enzymen der Zellatmung zu. Wo würde ein Mangel den Abbau bremsen?' },
       { kind: 'sim', id: 'nem', key: 'nem', st: 's2-10', titel: 'Werbeversprechen im Faktencheck', intro: 'Auf einer Packung steht: „trägt zu einem normalen Energiestoffwechsel bei“. Prüfe die Aussagen mit deinem Fachwissen – was stimmt, was ist Werbung?' },
-      { kind: 'sim', id: 'atmungskette', key: 'atmungskette', st: 's2-11', opts: { title: 'Labor: Hemmstoffe und Entkoppler testen', auto: true }, titel: 'Gift-Labor: Hemmstoffe und Entkoppler', intro: 'Teste Cyanid, Rotenon, Oligomycin und einen Entkoppler. Wo greift jeder Stoff an – und was passiert mit ATP und Wärme?' }
+      { kind: 'sim', id: 'atmungskette', key: 'atmungskette', ekey: 'giftlabor', st: 's2-11', opts: { title: 'Labor: Hemmstoffe und Entkoppler testen', auto: true }, titel: 'Gift-Labor: Hemmstoffe und Entkoppler', intro: 'Teste Cyanid, Rotenon, Oligomycin und einen Entkoppler. Wo greift jeder Stoff an – und was passiert mit ATP und Wärme?' }
     ],
     karten: ['s2-9', 's2-10', 's2-11'],
     schleuse: {
