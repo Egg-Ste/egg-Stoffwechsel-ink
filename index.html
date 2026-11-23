@@ -1283,6 +1283,75 @@ body.reise main#view { width: min(980px, 100%); }
 .erl-more[open] .erl-more-open { visibility: hidden; }
 .erl-more > summary::after { display: none !important; }
 
+/* ---------- Klausurtraining / Lerntheke ---------- */
+.lt-head { margin: 6px 0 22px; }
+.lt-head-row { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: center; justify-content: space-between; }
+.lt-kurs { display: inline-flex; margin-top: 6px; border: 1px solid var(--line-2); border-radius: 99px; overflow: hidden; }
+.lt-kurs button { appearance: none; border: 0; background: transparent; color: var(--text-2); font: inherit; font-weight: 700; padding: 8px 16px; cursor: pointer; min-height: 40px; }
+.lt-kurs button.on { background: var(--accent); color: #fff; }
+.lt-ziel { flex: 1 1 280px; max-width: 460px; }
+.lt-ziel small { color: var(--muted); }
+.lt-zielbar { height: 8px; border-radius: 99px; background: var(--bg-3); margin: 8px 0 4px; overflow: hidden; }
+.lt-zielbar span { display: block; height: 100%; background: var(--ok); border-radius: 99px; transition: width .4s; }
+.lt-how { margin-top: 16px; }
+.lt-how ol { margin: 0; padding-left: 1.3em; }
+.lt-how li { margin: 4px 0; }
+.lt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; margin: 10px 0 8px; }
+.lt-card { display: flex; flex-direction: column; gap: 6px; padding: 14px 16px; border-radius: var(--radius-s); background: var(--panel); border: 1px solid var(--line); border-left: 5px solid var(--s2); color: var(--text); text-decoration: none; transition: transform .15s, border-color .15s; }
+.lt-card:hover { transform: translateY(-2px); border-color: var(--line-2); }
+.lt-card.wahl { border-left-color: var(--accent); }
+.lt-card.lkp { border-left-style: dashed; }
+.lt-top { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: .8rem; }
+.lt-code { font-weight: 800; font-size: .95rem; padding: 2px 9px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--line-2); }
+.lt-st { color: var(--text-2); font-weight: 700; }
+.lt-time { margin-left: auto; color: var(--muted); white-space: nowrap; }
+.lt-t { font-weight: 800; font-size: 1.02rem; line-height: 1.3; }
+.lt-q { color: var(--text-2); font-size: .9rem; line-height: 1.4; flex: 1; }
+.lt-foot { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; font-size: .78rem; margin-top: 4px; }
+.lt-prog { color: var(--muted); font-weight: 700; }
+.lt-prog.ok { color: var(--ok); }
+.lt-kap { color: var(--muted); }
+.lt-legend { font-size: .85rem; }
+.lt-komp { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.lt-krow { display: grid; grid-template-columns: 1fr auto auto auto; gap: 8px 14px; align-items: center; padding: 10px 12px; border-radius: var(--radius-s); background: var(--panel); border: 1px solid var(--line); }
+.lt-krow.need { border-color: var(--warn); }
+.lt-ktxt { font-size: .92rem; line-height: 1.4; }
+.lt-kneed { display: block; margin-top: 4px; font-size: .8rem; font-weight: 700; color: var(--warn); text-decoration: none; }
+.lt-kst { font-weight: 800; font-size: .82rem; color: var(--accent); text-decoration: none; }
+.lt-kph { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.lt-kph small { color: var(--muted); font-size: .68rem; }
+.lt-pm { display: inline-flex; gap: 3px; }
+.lt-pm button { appearance: none; width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line-2); background: transparent; color: var(--text-2); font: inherit; font-weight: 800; cursor: pointer; padding: 0; }
+.lt-pm button.on.v0 { background: var(--ok); border-color: var(--ok); color: #06261a; }
+.lt-pm button.on.v1 { background: var(--warn); border-color: var(--warn); color: #2b1d00; }
+.lt-pm button.on.v2 { background: var(--bad); border-color: var(--bad); color: #fff; }
+.lt-meth { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.lt-kaps { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; margin: 10px 0; }
+.lt-kapgrp { display: flex; flex-direction: column; gap: 4px; }
+.lt-kapt { font-weight: 800; margin-bottom: 2px; }
+.lt-kapgrp a { color: var(--text-2); text-decoration: none; font-size: .9rem; }
+.lt-kapgrp a:hover { color: var(--text); text-decoration: underline; }
+.lt-stbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 14px; }
+.lt-exam { margin-bottom: 16px; border-left: 5px solid var(--warn); display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; justify-content: space-between; }
+.lt-exam > div:first-child { flex: 1 1 280px; }
+.lt-timerrow { display: flex; gap: 8px; align-items: center; }
+.lt-timer { font-family: var(--font-mono); font-size: 1.5rem; font-weight: 800; min-width: 84px; text-align: center; }
+.lt-timer.low { color: var(--bad); }
+.lt-nav { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin: 24px 0 10px; }
+.lt-kh { margin: 26px 0 4px; }
+@media (max-width: 560px) {
+  .lt-krow { grid-template-columns: 1fr auto; }
+  .lt-ktxt { grid-column: 1 / -1; }
+  .lt-kst { grid-column: 1 / -1; }
+  .lt-kph { flex-direction: row; gap: 6px; }
+  .lt-krow .lt-kph { grid-column: span 1; }
+}
+/* Gesamtbild im Kapitel: andere Bereiche anklickbar */
+.gb-link > g { transition: opacity .2s, filter .2s; }
+.gb-link:hover > g[opacity="0.28"], .gb-link:hover > g[opacity="0.35"], .gb-link:focus > g[opacity="0.28"], .gb-link:focus > g[opacity="0.35"] { opacity: .8; }
+.gb-link:focus { outline: none; }
+.gb-link:focus-visible > g { filter: drop-shadow(0 0 6px #ffe36e); }
+
 </style>
   <script>window.addEventListener('error', function (e) { window.__swErr = (window.__swErr || []).concat(String(e.message || e)); });</script>
 </head>
@@ -8235,6 +8304,22 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
   }
 
   // auf kleinen Bildschirmen: das markierte Feld ins Bild scrollen
+  /* Bereiche im Gesamtbild → Kapitel (erste Zone eines Kapitels hat Vorrang); ohne das aktuelle Kapitel */
+  function gbLinks(T, self) {
+    const links = {};
+    T.kap.forEach(k => { if (k[4] && !links[k[4][0]]) links[k[4][0]] = k[0]; });
+    T.kap.forEach(k => (k[4] || []).forEach(z => { if (!links[z]) links[z] = k[0]; }));
+    Object.keys(links).forEach(z => { if (links[z] === self) delete links[z]; else links[z] = '#/k/' + links[z]; });
+    return links;
+  }
+  function gbTitles(w) {
+    w.querySelectorAll('a.gb-link').forEach(a => {
+      const kid = (a.getAttribute('href') || '').replace('#/k/', ''), K = KAP[kid]; if (!K) return;
+      const t = document.createElementNS('http://www.w3.org/2000/svg', 'title'); t.textContent = '→ Zum Kapitel ' + K.nr + ': ' + K.name;
+      a.insertBefore(t, a.firstChild); a.setAttribute('aria-label', 'Zum Kapitel ' + K.name);
+    });
+    return w;
+  }
   function gbFocus(w) {
     setTimeout(() => { const t = w.querySelector('.gb-here'); if (!t || w.scrollWidth <= w.clientWidth) return; const r = t.getBoundingClientRect(), wr = w.getBoundingClientRect(); w.scrollLeft += (r.left + r.width / 2) - (wr.left + wr.width / 2); }, 80);
     return w;
@@ -8594,7 +8679,7 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
     view.appendChild(noteFig(SW.reiseKarte(), SW.REISE_PUNKTE.map(([x, y], i) => [x, y].concat(PUNKTE_REISE[i])), 'reise', { minW: 600, cls: 'nf-map' }));
 
     view.appendChild(h('a', { class: 'fall-strip', href: '#/faelle' }, h('span', { class: 'fs-ic' }, '🕵️'), h('div', null, h('b', null, 'Lust auf Detektivarbeit?'), h('span', null, ' Drei Kriminalfälle als Escape-Room – nur mit Biologie-Wissen lösbar.')), h('span', { class: 'fs-go' }, '→')));
-    view.appendChild(h('div', { class: 'r-mini' }, h('a', { href: '#/training' }, '📝 Klausurtraining'), h('a', { href: '#/begriffe' }, '📚 Begriffe'), h('a', { href: '#/info' }, 'ℹ️ Für Lehrkräfte')));
+    view.appendChild(h('div', { class: 'r-mini' }, h('a', { href: '#/klausur' }, '📝 Klausurtraining'), h('a', { href: '#/begriffe' }, '📚 Begriffe'), h('a', { href: '#/info' }, 'ℹ️ Für Lehrkräfte')));
   };
 
   function themaModul(T, k) {
@@ -8628,10 +8713,10 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
     const L = LEBEN[T.id] || { deko: [T.ic], frage: '', farbe2: T.farbe };
     view.appendChild(h('section', { class: 'tm-hero', style: { '--tc': T.farbe, '--tc2': L.farbe2 } }, h('div', { class: 'tm-deko', 'aria-hidden': 'true' }, L.deko.map((e, i) => h('span', { class: 'd' + i }, e))), h('div', { class: 'tm-txt' }, h('span', { class: 'tm-k' }, 'Thema'), h('h1', null, T.name), h('p', { class: 'tm-q' }, L.frage), h('p', { class: 'tm-satz' }, T.satz))));
     {
-      const links = {}; T.kap.forEach(k => { if (k[4]) links[k[4][0]] = '#/k/' + k[0]; }); T.kap.forEach(k => (k[4] || []).forEach(z => { if (!links[z]) links[z] = '#/k/' + k[0]; }));
+      const links = gbLinks(T);
       view.appendChild(h('section', { class: 'r-gb' },
         h('div', { class: 'ksec-h' }, h('span', { class: 'ksec-n' }, '🗺️'), h('div', null, h('h2', null, 'Das Gesamtbild'), h('div', { class: 'ksec-sub' }, 'So hängt alles zusammen. Tippe auf einen Bereich, um dorthin zu reisen.'))),
-        h('div', { class: 'gb-wrap fig', html: GB[T.id](null, { links }) }),
+        gbTitles(h('div', { class: 'gb-wrap fig', html: GB[T.id](null, { links }) })),
         h('div', { class: 'prose r-zus', html: '<p>' + GB_SATZ[T.id] + '</p>' })));
     }
     view.appendChild(h('h2', { class: 'r-h2' }, 'Die Kapitel'));
@@ -8666,8 +8751,8 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
     view.appendChild(story(D.story));
 
     // 1 Wo sind wir?
-    view.appendChild(sec(1, 'ort', 'Wo sind wir?', 'Das Gesamtbild der ' + T.name + ' – dein Kapitel ist markiert.',
-      gbFocus(h('div', { class: 'gb-wrap fig', html: GB[T.id](K.zone || null) })),
+    view.appendChild(sec(1, 'ort', 'Wo sind wir?', 'Das Gesamtbild der ' + T.name + ' – dein Kapitel ist markiert. Tippe auf einen anderen Bereich, um direkt in dieses Kapitel zu wechseln.',
+      gbFocus(gbTitles(h('div', { class: 'gb-wrap fig', html: GB[T.id](K.zone || null, { links: gbLinks(T, id) }) }))),
       h('div', { class: 'prose', html: '<p>' + fmt(D.ortSatz) + '</p>' }),
       h('div', { class: 'k-io' }, h('div', null, h('span', { class: 'k-io-l' }, 'Das kommt rein'), h('div', { html: fmt(D.rein) })), h('span', { class: 'k-io-arr' }, '→'), h('div', null, h('span', { class: 'k-io-l' }, 'Das kommt raus'), h('div', { html: fmt(D.raus) })))));
 
@@ -8710,7 +8795,11 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
       const s = SW.ST[sid]; if (!s) return;
       (s.aufgaben || []).forEach((t, i) => view.appendChild(SW.exercise(t, sid + '-' + i)));
     });
-    [D.station].concat(D.alsoSt || []).forEach(sid => { const s = SW.ST[sid]; if (s && s.lt) [].concat(s.lt).forEach(code => view.appendChild(aufklapp('🧩 <b>Große Klausuraufgabe mit Materialien</b> (' + code + ')', SW.lerntheke(code, s.ltMat && s.ltMat[code], s)))); });
+    const codes = [];
+    [D.station].concat(D.alsoSt || []).forEach(sid => { const s = SW.ST[sid]; if (s && s.lt) [].concat(s.lt).forEach(code => { if (codes.indexOf(code) < 0) codes.push(code); }); });
+    const lt = SW.ltFuerKapitel ? SW.ltFuerKapitel(K.id) : codes;
+    if (lt.length && SW.ltKarten) view.appendChild(SW.ltKarten(lt));
+    view.appendChild(h('p', { class: 'muted mt' }, h('a', { href: '#/klausur' }, '📝 Zum Klausurtraining mit allen Lerntheke-Stationen →')));
   }
 
   views.faelle = function (view) {
@@ -8742,7 +8831,7 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
     const h1 = view.querySelector('h1');
     const box = h('section', { class: 'card', style: { margin: '14px 0' } },
       h('h2', null, 'Aufbau der Reise'),
-      h('div', { class: 'prose', html: '<p>Drei Themen mit 17 Kapiteln. Jedes Kapitel folgt demselben Ablauf: <b>① Wo sind wir?</b> (Gesamtbild mit Markierung) → <b>② Das Wichtigste</b> (kurzer Sachtext, Merksatz, Vertiefungen zum Aufklappen) → <b>③ Zoom</b> (Abbildung mit Notizpunkten) → <b>④ Erlebe es</b> (Simulation/Animation mit Schritten zum Aufklappen, Karteikarten) → <b>⑤ Die Schleuse</b> (Codewort-Rätsel und drei Fragen). Im Reiter <b>Klausuraufgaben</b> stehen die Aufgaben im Abiturformat und die Lerntheke-Aufgaben mit Materialien. Durch alle Kapitel zieht sich die Reise eines Kohlenstoffatoms; die drei Fälle sind als Escape-Room zum Abschluss je Thema gedacht.</p>' }),
+      h('div', { class: 'prose', html: '<p>Drei Themen mit 17 Kapiteln. Jedes Kapitel folgt demselben Ablauf: <b>① Wo sind wir?</b> (Gesamtbild mit Markierung) → <b>② Das Wichtigste</b> (kurzer Sachtext, Merksatz, Vertiefungen zum Aufklappen) → <b>③ Zoom</b> (Abbildung mit Notizpunkten) → <b>④ Erlebe es</b> (Simulation/Animation mit Schritten zum Aufklappen, Karteikarten) → <b>⑤ Die Schleuse</b> (Codewort-Rätsel und drei Fragen). Im Reiter <b>Klausuraufgaben</b> stehen die Aufgaben im Abiturformat und Verweise auf die passenden Lerntheke-Stationen. Das <b>Klausurtraining</b> (#/klausur) bündelt die Lerntheke „Abbauender Glucosestoffwechsel“ nach dem Laufzettel: Pflicht- und Wahlstationen für GK und LK mit Zeitangaben, Methodenkarten, Kompetenzcheck und Zeitnehmer für die Klausurübungen W1 und W2. Durch alle Kapitel zieht sich die Reise eines Kohlenstoffatoms; die drei Fälle sind als Escape-Room zum Abschluss je Thema gedacht.</p>' }),
       SW.table(['Kapitel', 'Thema', 'bisherige Station(en)'], Object.values(KAP).map(K => [K.nr + ' · ' + K.name, (THEMEN.find(t => t.id === K.thema) || {}).name || '', (ST_MAP[K.id] || []).map(sid => SW.ST[sid] ? SW.ST[sid].nr : sid).join(', ')])));
     if (h1 && h1.nextSibling) view.insertBefore(box, h1.nextSibling); else view.appendChild(box);
   };
@@ -8751,8 +8840,8 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
   function nav() {
     const n = SW.$('.nav'); if (!n) return;
     n.innerHTML = '';
-    [['#/', 'Start'], ...THEMEN.map(T => ['#/thema/' + T.id, T.ic + ' ' + T.name]), ['#/faelle', '🕵️ Fälle'], ['#/training', '📝 Klausur']].forEach(([href, t]) => n.appendChild(h('a', { href }, t)));
-    const mark = () => { const hs = location.hash || '#/'; n.querySelectorAll('a').forEach(a => { const k = a.getAttribute('href'); const kid = (hs.match(/^#\/k\/([^/]+)/) || [])[1]; const th = kid && KAP[kid] ? '#/thema/' + KAP[kid].thema : null; a.classList.toggle('on', k === hs || (k !== '#/' && hs.startsWith(k)) || k === th); }); };
+    [['#/', 'Start'], ...THEMEN.map(T => ['#/thema/' + T.id, T.ic + ' ' + T.name]), ['#/faelle', '🕵️ Fälle'], ['#/klausur', '📝 Klausur']].forEach(([href, t]) => n.appendChild(h('a', { href }, t)));
+    const mark = () => { const hs = location.hash || '#/'; n.querySelectorAll('a').forEach(a => { const k = a.getAttribute('href'); const kid = (hs.match(/^#\/k\/([^/]+)/) || [])[1]; const th = kid && KAP[kid] ? '#/thema/' + KAP[kid].thema : null; a.classList.toggle('on', k === hs || (k !== '#/' && hs.startsWith(k)) || k === th || (k === '#/klausur' && (hs.startsWith('#/lt/') || hs.startsWith('#/training')))); }); };
     window.addEventListener('hashchange', mark); mark();
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', nav); else nav();
@@ -9442,6 +9531,191 @@ SW.METHODEN={"M1": {"id": "M1", "titel": "Eine Abbildung erschließen", "schritt
       ['Lies: Wohin werden die Protonen gepumpt, und wo entsteht ATP?', 'Mitochondrium: in den Intermembranraum, ATP entsteht in der Matrix. Chloroplast: in den Thylakoidinnenraum, ATP entsteht im Stroma.']
     ],
     ergebnis: 'Beide Organellen nutzen das <b>Staudamm-Prinzip</b> (Chemiosmose): Elektronentransport pumpt Protonen über eine dichte Membran, ihr Rückstrom durch die ATP-Synthase bildet ATP. Spiegelbildlich sind <b>Energiequelle</b> (Nahrung bzw. Licht), <b>Elektronenquelle</b> (NADH bzw. Wasser) und <b>Endempfänger</b> (Sauerstoff bzw. NADP⁺). Wasser wird im Mitochondrium gebildet, im Chloroplasten gespalten.'
+  };
+})();
+
+</script>
+  <script>/* js/klausur.js */
+/* ==========================================================
+   Klausurtraining: Lerntheke „Abbauender Glucosestoffwechsel“
+   – Laufzettel, Laufplan (GK/LK), Stationsseiten, Kompetenzcheck
+   ========================================================== */
+(function () {
+  'use strict';
+  const SW = window.SW, h = SW.h, store = SW.store, views = SW.views;
+
+  /* Laufplan aus dem Laufzettel: GK, LK, Zeit, Methodenkarten */
+  const PLAN = {
+    P1: ['Pflicht', 'Pflicht', '40 min', 'M1 M2'], P2: ['Pflicht', 'Pflicht', '45 min', 'M1 M3'], P3: ['Pflicht', 'Pflicht', '45 min', 'M2 M4'],
+    P4: ['Pflicht', 'Pflicht', '45–60 min', 'M1 M4 M5'], P5: ['Pflicht', 'Pflicht', '45 min', 'M3'], P6: ['Wahl', 'Pflicht', '45 min', 'M5 M6'],
+    P7: ['Wahl', 'Pflicht', '45 min', 'M2 M5'], P8: ['Wahl', 'Pflicht', '45 min', 'M5 M6'], W1: ['Wahl', 'Wahl', '40 min', 'M4 M5 M7'],
+    W2: ['Wahl', 'Wahl', '40 min', 'M4 M7'], W3: ['Wahl', 'Wahl', '35 min', 'M5'], W4: ['Wahl', 'Wahl (empfohlen)', '40 min', 'M5 M6'],
+    W5: ['Wahl', 'Wahl (empfohlen)', '35 min', 'M2'], W6: ['Wahl', 'Wahl (empfohlen)', '35 min', 'M2 M6']
+  };
+  const ART = { W1: 'Klausurtraining', W2: 'Klausurtraining', W3: 'Anwendung', W4: 'Vertiefung', W5: 'Vertiefung', W6: 'Vernetzung' };
+
+  /* Ergänzungen der Wahlstationen aus dem Lerntheke-Material */
+  const WMETA = {
+    W1: { nehme: 'Ich kann eine klausurartige Aufgabe zur Atmungskette unter Zeitvorgabe bearbeiten.', methoden: 'Methodenkarten: M4 Experimentelle Ansätze vergleichen, M5 Diagramme auswerten, M7 Klausuraufgaben strukturiert bearbeiten', vernetzung: 'Vernetzung: Wendet P4 an; das Prinzip der Hemmstoffanalyse begegnet auch in der Neurobiologie.', hinweis: 'Bearbeitungszeit 30 Minuten, insgesamt 20 BE. Arbeiten Sie ohne Impulskarten und vergleichen Sie erst danach mit dem Erwartungshorizont.', minuten: 30 },
+    W2: { nehme: 'Ich kann das Prinzip der Entkopplung auf einen neuen biologischen Kontext übertragen.', methoden: 'Methodenkarten: M4 Experimentelle Ansätze vergleichen, M7 Klausuraufgaben strukturiert bearbeiten', vernetzung: 'Vernetzung: Überträgt die Erkenntnisse aus P4 (2,4-Dinitrophenol) auf ein natürliches System.', hinweis: 'Bearbeitungszeit 30 Minuten, insgesamt 20 BE.', minuten: 30 },
+    W3: { nehme: 'Ich kann sportphysiologische Messdaten mithilfe der Stoffwechselwege deuten.', methoden: 'Methodenkarten: M5 Diagramme auswerten', vernetzung: 'Vernetzung: Verbindet P4 (Sauerstoffabhängigkeit) und P7 (Milchsäuregärung).' },
+    W4: { nehme: 'Ich kann eine scheinbar widersprüchliche Beobachtung mithilfe der Stoffwechselwege erklären und konkurrierende Hypothesen abwägen.', methoden: 'Methodenkarten: M5 Diagramme auswerten, M6 Modelle beurteilen', vernetzung: 'Vernetzung: Verknüpft P2, P4 und P7; stellt eine Brücke zum Inhaltsfeld Genetik (Regulation und Krebs) her.' },
+    W5: { nehme: 'Ich kann den Abbau anderer Nährstoffe in den Glucosestoffwechsel einordnen und die Verknüpfung der Stoffwechselwege erläutern.', methoden: 'Methodenkarten: M2 Datentabellen auswerten', vernetzung: 'Vernetzung: Erweitert P3 über die Glucose hinaus; verbindet Kohlenhydrat-, Fett- und Proteinstoffwechsel.' },
+    W6: { nehme: 'Ich kann den membranbasierten Mechanismus der Energieumwandlung in beiden Organellen vergleichen und das gemeinsame Prinzip herausarbeiten.', methoden: 'Methodenkarten: M2 Datentabellen auswerten, M6 Modelle beurteilen', vernetzung: 'Vernetzung: Bereitet das Unterrichtsvorhaben Fotosynthese vor und schließt an P4 und P6 an.' }
+  };
+  if (SW.LT) Object.keys(WMETA).forEach(k => { if (SW.LT[k]) { const m = WMETA[k]; ['nehme', 'methoden', 'vernetzung'].forEach(f => { if (!SW.LT[k][f]) SW.LT[k][f] = m[f]; }); } });
+
+  /* Kompetenzcheck aus dem Laufzettel */
+  const KOMP = [
+    ['Ich kann den Feinbau des Mitochondriums beschreiben und die Bedeutung der Kompartimentierung erläutern.', 'P1', 1, 1],
+    ['Ich kann Ablauf und Bilanz der Glykolyse darstellen.', 'P2', 1, 1],
+    ['Ich kann erklären, welche Schritte der Glykolyse praktisch irreversibel sind.', 'P2', 1, 1],
+    ['Ich kann oxidative Decarboxylierung und Citratzyklus beschreiben und bilanzieren.', 'P3', 1, 1],
+    ['Ich kann ein Markierungsexperiment zur Herkunft des Kohlenstoffdioxids auswerten.', 'P3', 1, 1],
+    ['Ich kann den Elektronentransport in der Atmungskette beschreiben.', 'P4', 1, 1],
+    ['Ich kann die chemiosmotische Kopplung erläutern und aus Entkopplerversuchen begründen.', 'P4', 1, 1],
+    ['Ich kann die Gesamtbilanz der Zellatmung aufstellen und mit der Bruttogleichung abgleichen.', 'P5', 1, 1],
+    ['Ich kann den Wirkungsgrad der Zellatmung beurteilen.', 'P5', 1, 1],
+    ['Ich kann die Atmungskette mithilfe von Redoxpotenzialen energetisch deuten.', 'P6', 0, 1],
+    ['Ich kann begründen, warum Komplex II keine Protonen transportiert.', 'P6', 0, 1],
+    ['Ich kann die Gärungswege darstellen und ihre Funktion für die NAD⁺-Regeneration erläutern.', 'P7', 0, 1],
+    ['Ich kann den Pasteur-Effekt erklären.', 'P7', 0, 1],
+    ['Ich kann die allosterische Regulation der Phosphofructokinase-1 aus Daten ableiten.', 'P8', 0, 1],
+    ['Ich kann Stoffwechselregulation als negative Rückkopplung deuten.', 'P8', 1, 1],
+    ['Ich kann Erkenntnisse zur Atmungskette auf neue Kontexte übertragen (Hemmstoffe, braunes Fettgewebe, Sport).', 'W1', 1, 1],
+    ['Ich kann Zellatmung und Fotosynthese als membranbasierte Energieumwandlung vergleichen.', 'W6', 0, 1]
+  ];
+
+  /* Station → Kapitel und Material (aus den Kapiteldaten abgeleitet) */
+  function index() {
+    const out = {};
+    Object.values(SW.REISE.KAP).forEach(K => {
+      const D = (SW.KAPITEL || {})[K.id]; if (!D) return;
+      [D.station].concat(D.alsoSt || []).forEach(sid => { const s = SW.ST[sid]; if (s && s.lt) [].concat(s.lt).forEach(code => { if (!out[code]) out[code] = { kap: K, st: s, mats: s.ltMat && s.ltMat[code] }; }); });
+    });
+    // Wahlstationen inhaltlich dem passenden Kapitel zuordnen (Material bleibt dasselbe)
+    Object.keys(NACH).forEach(code => { const K = SW.REISE.KAP[NACH[code]]; if (out[code] && K) out[code].kap = K; });
+    return out;
+  }
+  const NACH = { W1: 'atmungskette', W2: 'atmungskette', W3: 'gaerung', W4: 'gaerung', W5: 'citratzyklus', W6: 'fotoreaktion' };
+  SW.ltFuerKapitel = function (kid) { const IX = index(); return ORDER.filter(c => IX[c] && IX[c].kap.id === kid); };
+  const kurs = () => store.get('lt:kurs', 'GK');
+  const done = code => { const L = SW.LT[code]; const n = L.aufgaben.filter(a => SW.prog.solved['LT-' + code + '-' + a.nr]).length; return [n, L.aufgaben.length]; };
+  const statusFor = code => kurs() === 'LK' ? PLAN[code][1] : PLAN[code][0];
+  const ORDER = ['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7', 'P8', 'W1', 'W2', 'W3', 'W4', 'W5', 'W6'];
+
+  function ltCard(code, IX) {
+    const L = SW.LT[code], P = PLAN[code], st = statusFor(code), [n, m] = done(code), X = IX[code];
+    const cls = code[0] === 'W' ? 'wahl' : (st === 'Pflicht' ? 'pflicht' : 'wahl lkp');
+    return h('a', { class: 'lt-card ' + cls, href: '#/lt/' + code },
+      h('div', { class: 'lt-top' }, h('span', { class: 'lt-code' }, code), h('span', { class: 'lt-st' }, st + (code[0] === 'W' && ART[code] ? ' · ' + ART[code] : '')), h('span', { class: 'lt-time' }, '⏱ ' + P[2])),
+      h('div', { class: 'lt-t', html: L.titel.replace(/^(Klausurtraining|Anwendung|Vertiefung|Vernetzung): /, '') }),
+      h('div', { class: 'lt-q' }, L.leitfrage),
+      h('div', { class: 'lt-foot' },
+        h('span', { class: 'lt-prog' + (n === m ? ' ok' : '') }, n === m ? '✓ alle ' + m + ' Aufgaben' : n + ' von ' + m + ' Aufgaben'),
+        X ? h('span', { class: 'lt-kap' }, X.kap.ic + ' ' + X.kap.name) : null));
+  }
+
+  function kursSwitch(onChange) {
+    const wrap = h('div', { class: 'lt-kurs', role: 'group', 'aria-label': 'Kurs wählen' });
+    ['GK', 'LK'].forEach(k => { const b = h('button', { type: 'button', class: kurs() === k ? 'on' : '' }, k === 'GK' ? 'Grundkurs' : 'Leistungskurs'); b.addEventListener('click', () => { store.set('lt:kurs', k); onChange(); }); wrap.appendChild(b); });
+    return wrap;
+  }
+
+  /* ---------- Übersicht: #/klausur ---------- */
+  views.klausur = function (view) {
+    document.body.classList.add('reise');
+    const IX = index();
+    const draw = () => {
+      view.innerHTML = '';
+      view.appendChild(h('div', { class: 'r-crumb' }, h('a', { href: '#/' }, 'Start'), ' › Klausurtraining'));
+      view.appendChild(h('section', { class: 'r-thead' }, h('div', { class: 'r-thema-ic' }, '📝'), h('div', null, h('h1', null, 'Klausurtraining'), h('p', { class: 'r-lead' }, 'Die Lerntheke zum abbauenden Glucosestoffwechsel: Aufgaben im Abiturformat mit Material, gestuften Hilfen und Erwartungshorizont.'))));
+      const G = kurs() === 'GK';
+      const ziel = G ? 'Pflicht: <b>P1 bis P5</b> · dazu mindestens <b>eine</b> Wahlstation' : 'Pflicht: <b>P1 bis P8</b> · dazu mindestens <b>zwei</b> Wahlstationen';
+      const pf = ORDER.filter(c => statusFor(c) === 'Pflicht'), pfDone = pf.filter(c => { const [n, m] = done(c); return n === m; }).length;
+      view.appendChild(h('section', { class: 'lt-head card' },
+        h('div', { class: 'lt-head-row' }, h('div', null, h('div', { class: 'kicker' }, 'Dein Kurs'), kursSwitch(draw)), h('div', { class: 'lt-ziel' }, h('div', { html: '🎯 ' + ziel }), h('div', { class: 'lt-zielbar' }, h('span', { style: { width: Math.round(100 * pfDone / pf.length) + '%' } })), h('small', null, pfDone + ' von ' + pf.length + ' Pflichtstationen vollständig'))),
+        h('details', { class: 'auf lt-how' }, h('summary', null, h('span', { class: 'auf-t', html: '📋 <b>So arbeitest du an der Lerntheke</b>' })), h('div', { class: 'auf-b prose', html:
+          '<ol><li><b>Station wählen.</b> Am besten die Pflichtstationen der Reihe nach, die Wahlstationen danach.</li>' +
+          '<li><b>Material auswerten, dann Aufgaben lösen.</b> Schreib deine Antwort ins Feld (sie bleibt nur auf diesem Gerät) oder ins Heft.</li>' +
+          '<li><b>Hängst du fest?</b> Zu jeder Aufgabe gibt es zwei Hilfen: Stufe 1 ist ein Denkanstoß, Stufe 2 eine konkrete Hilfe. Immer zuerst Stufe 1.</li>' +
+          '<li><b>Erst danach vergleichen.</b> Öffne den Erwartungshorizont, markiere Abweichungen und hake die Aufgabe ab.</li>' +
+          '<li><b>Methodenkarten</b> erklären, wie man Abbildungen, Tabellen, Diagramme und Versuche auswertet. Sie gelten für alle Stationen.</li></ol>' })))
+      );
+      view.appendChild(h('h2', { class: 'r-h2' }, '📍 Pflichtstationen'));
+      view.appendChild(h('div', { class: 'lt-grid' }, ORDER.filter(c => c[0] === 'P').map(c => ltCard(c, IX))));
+      view.appendChild(h('p', { class: 'muted lt-legend' }, G ? 'P6 bis P8 sind im Grundkurs Wahlstationen, im Leistungskurs Pflicht.' : 'P6 bis P8 sind im Leistungskurs Pflicht.'));
+      view.appendChild(h('h2', { class: 'r-h2' }, '🧭 Wahlstationen'));
+      view.appendChild(h('p', { class: 'muted' }, 'W1 und W2 sind echte Klausurübungen mit Zeitvorgabe und Bewertungseinheiten. W4 bis W6 werden besonders für den Leistungskurs empfohlen.'));
+      view.appendChild(h('div', { class: 'lt-grid' }, ORDER.filter(c => c[0] === 'W').map(c => ltCard(c, IX))));
+      // Kompetenzcheck
+      view.appendChild(h('h2', { class: 'r-h2' }, '✅ Kompetenzcheck – „Ich kann …“'));
+      view.appendChild(h('p', { class: 'muted' }, 'Schätze dich vor und nach der Lerntheke ein: + sicher · o teilweise · – noch unsicher. Alles mit o oder – übst du noch einmal an der angegebenen Station.'));
+      const kc = store.get('lt:komp', {});
+      const tbl = h('div', { class: 'lt-komp' });
+      KOMP.filter(r => G ? r[2] : r[3]).forEach(([txt, code]) => {
+        const id = code + ':' + txt.slice(10, 40);
+        const cell = (phase) => { const g = h('div', { class: 'lt-pm' }); ['+', 'o', '–'].forEach(v => { const b = h('button', { type: 'button', class: (kc[id] || {})[phase] === v ? 'on v' + '+o–'.indexOf(v) : '', title: phase === 'vor' ? 'vor der Lerntheke' : 'nach der Lerntheke' }, v); b.addEventListener('click', () => { const o = kc[id] = kc[id] || {}; o[phase] = o[phase] === v ? null : v; store.set('lt:komp', kc); draw(); }); g.appendChild(b); }); return g; };
+        const after = (kc[id] || {}).nach, need = after === 'o' || after === '–';
+        tbl.appendChild(h('div', { class: 'lt-krow' + (need ? ' need' : '') },
+          h('div', { class: 'lt-ktxt' }, txt, need ? h('a', { class: 'lt-kneed', href: '#/lt/' + code }, '→ noch einmal üben: ' + code) : null),
+          h('a', { class: 'lt-kst', href: '#/lt/' + code }, code),
+          h('div', { class: 'lt-kph' }, h('small', null, 'vorher'), cell('vor')),
+          h('div', { class: 'lt-kph' }, h('small', null, 'nachher'), cell('nach'))));
+      });
+      view.appendChild(tbl);
+      // Methodenkarten
+      view.appendChild(h('h2', { class: 'r-h2' }, '🧭 Methodenkarten'));
+      view.appendChild(h('div', { class: 'lt-meth' }, Object.values(SW.METHODEN || {}).map(M => h('button', { type: 'button', class: 'chip click', onclick: () => SW.methodenkarte(M.id) }, M.id + ' · ' + M.titel))));
+      // Weitere Aufgaben je Kapitel
+      view.appendChild(h('h2', { class: 'r-h2' }, '📚 Weitere Übungsaufgaben nach Kapitel'));
+      view.appendChild(h('p', { class: 'muted' }, 'Kürzere Aufgaben zu jedem Kapitel – zum Wiederholen vor der Klausur.'));
+      view.appendChild(h('div', { class: 'lt-kaps' }, SW.REISE.THEMEN.map(T => h('div', { class: 'lt-kapgrp' }, h('div', { class: 'lt-kapt' }, T.ic + ' ' + T.name), T.kap.map(k => h('a', { href: '#/k/' + k[0] + '/klausur' }, k[2] + ' ' + k[1]))))));
+      view.appendChild(h('p', { class: 'muted mt' }, h('a', { href: '#/training' }, 'Alle Einzelaufgaben auf einer Seite (bisherige Ansicht) →')));
+    };
+    draw();
+  };
+
+  /* ---------- Station: #/lt/P4 ---------- */
+  views.lt = function (view, code) {
+    document.body.classList.add('reise');
+    code = String(code || 'P1').toUpperCase();
+    const L = SW.LT[code]; if (!L) return views.klausur(view);
+    const IX = index(), X = IX[code] || {};
+    const i = ORDER.indexOf(code), prev = ORDER[i - 1], next = ORDER[i + 1];
+    view.appendChild(h('div', { class: 'r-crumb' }, h('a', { href: '#/' }, 'Start'), ' › ', h('a', { href: '#/klausur' }, 'Klausurtraining'), ' › Station ' + code));
+    const P = PLAN[code];
+    view.appendChild(h('div', { class: 'lt-stbar' },
+      h('span', { class: 'chip' }, 'GK: ' + P[0]), h('span', { class: 'chip' }, 'LK: ' + P[1]), h('span', { class: 'chip' }, '⏱ ca. ' + P[2]),
+      X.kap ? h('a', { class: 'chip click', href: '#/k/' + X.kap.id }, '📖 Nachlernen: ' + X.kap.ic + ' ' + X.kap.name) : null));
+    const W = WMETA[code];
+    if (W && W.hinweis) {
+      const box = h('div', { class: 'lt-exam card' }, h('div', null, h('b', null, '⏱ Unter Klausurbedingungen: '), W.hinweis));
+      if (W.minuten) {
+        let left = W.minuten * 60, iv = null;
+        const disp = h('span', { class: 'lt-timer' }, fmtT(left));
+        const btn = h('button', { type: 'button', class: 'btn primary small' }, '▶ Zeit starten');
+        const rst = h('button', { type: 'button', class: 'btn ghost small' }, '↺');
+        const stop = () => { clearInterval(iv); iv = null; btn.textContent = '▶ weiter'; };
+        btn.addEventListener('click', () => { if (iv) return stop(); btn.textContent = '⏸ Pause'; iv = setInterval(() => { left = Math.max(0, left - 1); disp.textContent = fmtT(left); disp.classList.toggle('low', left <= 300); if (!left) { stop(); btn.textContent = '⏰ Zeit ist um'; } if (!box.isConnected) clearInterval(iv); }, 1000); });
+        rst.addEventListener('click', () => { stop(); left = W.minuten * 60; disp.textContent = fmtT(left); disp.classList.remove('low'); btn.textContent = '▶ Zeit starten'; });
+        box.appendChild(h('div', { class: 'lt-timerrow' }, disp, btn, rst));
+        SW.onCleanup && SW.onCleanup(() => clearInterval(iv));
+      }
+      view.appendChild(box);
+    }
+    view.appendChild(SW.lerntheke(code, X.mats, X.st));
+    view.appendChild(h('div', { class: 'lt-nav' },
+      prev ? h('a', { class: 'btn ghost', href: '#/lt/' + prev }, '← ' + prev) : h('span'),
+      h('a', { class: 'btn ghost', href: '#/klausur' }, 'Zur Übersicht'),
+      next ? h('a', { class: 'btn primary', href: '#/lt/' + next }, next + ' →') : h('span')));
+  };
+  function fmtT(s) { return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); }
+
+  /* Lerntheke-Karten für den Klausur-Reiter eines Kapitels */
+  SW.ltKarten = function (codes) {
+    const IX = index();
+    return h('div', null, h('h3', { class: 'lt-kh' }, '🧩 Lerntheke zu diesem Kapitel'), h('p', { class: 'muted' }, 'Große Aufgaben mit Material, gestuften Hilfen und Erwartungshorizont – wie in der Klausur.'), h('div', { class: 'lt-grid' }, codes.filter(c => SW.LT[c]).map(c => ltCard(c, IX))));
   };
 })();
 
